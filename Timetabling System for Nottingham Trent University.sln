@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35913.81 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Timetabling System for Nottingham Trent University", "Timetabling System for Nottingham Trent University.vcxproj", "{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Debug|x64.ActiveCfg = Debug|x64
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Debug|x64.Build.0 = Debug|x64
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Debug|x86.ActiveCfg = Debug|Win32
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Debug|x86.Build.0 = Debug|Win32
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Release|x64.ActiveCfg = Release|x64
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Release|x64.Build.0 = Release|x64
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Release|x86.ActiveCfg = Release|Win32
+		{09CFFAEA-79DF-4A98-A256-D3A0C2DA8A1F}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2DDC2CF9-6703-4937-808F-5C0A081A0B64}
+	EndGlobalSection
+EndGlobal
