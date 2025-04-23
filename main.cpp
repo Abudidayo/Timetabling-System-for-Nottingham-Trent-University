@@ -168,11 +168,20 @@ int main() {
     unordered_map<int, Module> modules;
     unordered_map<int, Session> sessions;
 
-    cout << "Welcome to the Timetabling System\n"
-        << "1. Login\n"
-        << "2. Register as Student\n"
-        << "Choose an option: ";
-    int choice; cin >> choice;
+    int choice;
+    while (true) {
+        cout << "Welcome to the Timetabling System\n"
+            << "1. Login\n"
+            << "2. Register as Student\n"
+            << "Choose an option (1 or 2): ";
+        cin >> choice;
+        if (!cin.fail() && (choice == 1 || choice == 2)) {
+            break;
+        }
+        cout << "Invalid input. Please enter 1 or 2.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
 
     string username, password, role;
     if (choice == 2) {
