@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <limits>
 #include "Module.h"
@@ -67,9 +68,10 @@ bool registerUser(unordered_map<string, User>& users,
     return true;
 }
 
-// Session persistence
+// Session file name
 const string sessionFile = "sessions.txt";
 
+// Save a session to file
 void saveSessionToFile(const string& filename, const Session& s) {
     ofstream file(filename, ios::app);
     file << s.getSessionType() << ","
@@ -80,6 +82,7 @@ void saveSessionToFile(const string& filename, const Session& s) {
         << s.getModuleCode() << "\n";
 }
 
+// Load sessions from file
 unordered_map<int, vector<Session>> loadSessionsFromFile(const string& filename) {
     unordered_map<int, vector<Session>> sessions;
     ifstream file(filename);
@@ -101,28 +104,30 @@ unordered_map<int, vector<Session>> loadSessionsFromFile(const string& filename)
     return sessions;
 }
 
-// Menus
+// Show admin menu
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
         << "1. Add Module\n"
         << "2. Create Session\n"
         << "3. Manage Groups\n"
         << "4. View Modules\n"
-        << "5. View Timetable\n"
-        << "6. Sign Out\n"
+        << "5. View All Sessions\n"
+        << "6. Add Room\n"
+        << "7. Exit\n"
         << "Choose an option: ";
 }
 
+// Show student menu
 void showStudentMenu() {
     cout << "\n=== Student Menu ===\n"
         << "1. View Timetable\n"
         << "2. Search Timetable\n"
         << "3. Export Timetable\n"
-        << "4. Sign Out\n"
+        << "4. Exit\n"
         << "Choose an option: ";
 }
 
-// Module management
+// Add a module
 void addModule(unordered_map<int, Module>& modules) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter module name: ";
@@ -133,6 +138,7 @@ void addModule(unordered_map<int, Module>& modules) {
     cout << "Module \"" << name << "\" (Code: " << code << ") added.\n";
 }
 
+// List all modules
 void listModules(const unordered_map<int, Module>& modules) {
     if (modules.empty()) {
         cout << "No modules available.\n";
@@ -144,14 +150,16 @@ void listModules(const unordered_map<int, Module>& modules) {
     }
 }
 
-// Session creation
+// Create session by picking an existing module
 void createSession(const unordered_map<int, Module>& modules,
-    unordered_map<int, vector<Session>>& sessions) {
+    unordered_map<int, vector<Session>>& sessions,
+    vector<string>& rooms) {
     if (modules.empty()) {
         cout << "No modules available. Add a module first.\n";
         return;
     }
 
+    // Display modules
     vector<int> codes;
     cout << "\nAvailable Modules:\n";
     int idx = 1;
@@ -163,6 +171,7 @@ void createSession(const unordered_map<int, Module>& modules,
         ++idx;
     }
 
+    // Select by index
     cout << "Select a module by number: ";
     int choice; cin >> choice;
     if (cin.fail() || choice < 1 || choice >(int)codes.size()) {
@@ -173,6 +182,24 @@ void createSession(const unordered_map<int, Module>& modules,
     }
     int moduleCode = codes[choice - 1];
 
+    // Display rooms
+    cout << "\nAvailable Rooms:\n";
+    int roomIdx = 1;
+    for (const string& room : rooms) {
+        cout << "  " << roomIdx << ". " << room << "\n";
+        roomIdx++;
+    }
+
+    cout << "Select a room by number: ";
+    int roomChoice; cin >> roomChoice;
+    if (roomChoice < 1 || roomChoice > rooms.size()) {
+        cout << "Invalid room selection.\n";
+        return;
+    }
+
+    string selectedRoom = rooms[roomChoice - 1];
+
+    // Gather session details
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter session type (Lecture/Lab): ";
     string type; getline(cin, type);
@@ -180,16 +207,40 @@ void createSession(const unordered_map<int, Module>& modules,
     string day; getline(cin, day);
     cout << "Enter time of the session: ";
     string time; getline(cin, time);
-    cout << "Enter room number: ";
-    string room; getline(cin, room);
     cout << "Enter lecturer name: ";
     string lecturer; getline(cin, lecturer);
 
-    Session s(type, day, time, room, lecturer, moduleCode);
+    // Store and save session
+    Session s(type, day, time, selectedRoom, lecturer, moduleCode);
     sessions[moduleCode].push_back(s);
     saveSessionToFile(sessionFile, s);
 
-    cout << "Session created for module code " << moduleCode << ".\n";
+    cout << "Session created for module code " << moduleCode << " in room " << selectedRoom << ".\n";
+}
+
+// Add a room to the list
+void addRoom(vector<string>& rooms) {
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Enter room name: ";
+    string roomName;
+    getline(cin, roomName);
+    rooms.push_back(roomName);
+    cout << "Room \"" << roomName << "\" added.\n";
+}
+
+// View all sessions
+void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
+    if (sessions.empty()) {
+        cout << "No sessions available.\n";
+        return;
+    }
+
+    cout << "\n=== All Sessions ===\n";
+    for (const auto& kv : sessions) {
+        for (const auto& session : kv.second) {
+            session.printSessionDetails();
+        }
+    }
 }
 
 int main() {
@@ -198,10 +249,11 @@ int main() {
 
     unordered_map<int, Module> modules;
     auto sessions = loadSessionsFromFile(sessionFile);
+    vector<string> rooms;  // List of rooms
 
+    int choice;
     while (true) {
         // Login/Register
-        int choice;
         while (true) {
             cout << "Welcome to the Timetabling System\n"
                 << "1. Login\n"
@@ -247,21 +299,17 @@ int main() {
             while (true) {
                 showAdminMenu();
                 cin >> choice;
-                if (choice == 6) {
+                if (choice == 7) {
                     cout << "Signing out...\n";
                     break;  // back to login/register
                 }
                 switch (choice) {
                 case 1: addModule(modules); break;
-                case 2: createSession(modules, sessions); break;
+                case 2: createSession(modules, sessions, rooms); break;
                 case 3: cout << "Managing Groups...\n"; break;
                 case 4: listModules(modules); break;
-                case 5:
-                    cout << "\n=== All Sessions ===\n";
-                    for (auto& kv : sessions)
-                        for (auto& s : kv.second)
-                            s.printSessionDetails();
-                    break;
+                case 5: viewAllSessions(sessions); break;
+                case 6: addRoom(rooms); break;
                 default: cout << "Invalid option.\n";
                 }
             }
