@@ -6,16 +6,26 @@ using namespace std;
 
 class Module {
 private:
-    string name;
-    int code;
+    string moduleName;
+    int moduleCode;
 
 public:
-    // Constructor
+    // Default constructor
+    Module();
+
+    // Constructor with parameters
     Module(string name, int code);
 
     // Method to print module details
-    void printDetails() const;  // Marked as const
+    void printDetails() const;
+
+    // Getter methods
+    string getName() const;
+    int getCode() const;
+
+    // Setter methods
+    void setName(const string& name);
+    void setCode(int code);
 };
 
 #endif  // MODULE_H
-#pragma once

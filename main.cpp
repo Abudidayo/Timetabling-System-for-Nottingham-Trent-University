@@ -3,8 +3,10 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <iomanip>  // For better formatting of the menu
+#include "Module.h"  // Include the Module header
 
 using namespace std;
 
@@ -45,8 +47,9 @@ void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n";
     cout << "1. Add Module\n";
     cout << "2. Manage Groups\n";
-    cout << "3. View Timetable\n";
-    cout << "4. Exit\n";
+    cout << "3. View Modules\n";
+    cout << "4. View Timetable\n";
+    cout << "5. Exit\n";
     cout << "Choose an option: ";
 }
 
@@ -84,9 +87,38 @@ bool registerUser(unordered_map<string, User>& users, const string& username, co
     return true;
 }
 
+// Function to add a module for the admin
+void addModule(unordered_map<int, Module>& modules) {
+    string moduleName;
+    int moduleCode;
+
+    cout << "Enter module name: ";
+    cin.ignore();  // To clear the input buffer
+    getline(cin, moduleName);
+
+    cout << "Enter module code: ";
+    cin >> moduleCode;
+
+    // Create a new Module object and add it to the map
+    Module newModule(moduleName, moduleCode);
+    modules[moduleCode] = newModule;
+
+    cout << "Module " << moduleName << " with code " << moduleCode << " has been added.\n";
+}
+
+// Function to list all modules (for admin use)
+void listModules(const unordered_map<int, Module>& modules) {
+    cout << "\n=== List of Modules ===\n";
+    for (const auto& module : modules) {
+        module.second.printDetails();
+    }
+}
+
 int main() {
     string filename = "users.txt";
     unordered_map<string, User> users = loadUsersFromFile(filename);
+
+    unordered_map<int, Module> modules; // Stores modules by module code
 
     string username, password, role;
     int choice;
@@ -126,7 +158,8 @@ int main() {
         if (authenticateUser(users, username, password, role)) {
             cout << "Login successful!\n";
             loginSuccess = true;
-        } else {
+        }
+        else {
             attemptCount++;
             cout << "Invalid username or password. You have " << (maxAttempts - attemptCount) << " attempts left.\n";
             if (attemptCount == maxAttempts) {
@@ -143,11 +176,24 @@ int main() {
             showAdminMenu();
             cin >> option;
             switch (option) {
-                case 1: cout << "Adding Module...\n"; break;
-                case 2: cout << "Managing Groups...\n"; break;
-                case 3: cout << "Viewing Timetable...\n"; break;
-                case 4: cout << "Exiting...\n"; return 0;
-                default: cout << "Invalid option. Try again.\n"; break;
+            case 1:
+                addModule(modules);  // Add a module
+                break;
+            case 2:
+                cout << "Managing Groups...\n";
+                break;
+            case 3:
+                listModules(modules);  // View all modules
+                break;
+            case 4:
+                cout << "Viewing Timetable...\n";
+                break;
+            case 5:
+                cout << "Exiting...\n";
+                return 0;
+            default:
+                cout << "Invalid option. Try again.\n";
+                break;
             }
         }
     }
@@ -157,11 +203,11 @@ int main() {
             showStudentMenu();
             cin >> option;
             switch (option) {
-                case 1: cout << "Viewing Timetable...\n"; break;
-                case 2: cout << "Searching Timetable...\n"; break;
-                case 3: cout << "Exporting Timetable...\n"; break;
-                case 4: cout << "Exiting...\n"; return 0;
-                default: cout << "Invalid option. Try again.\n"; break;
+            case 1: cout << "Viewing Timetable...\n"; break;
+            case 2: cout << "Searching Timetable...\n"; break;
+            case 3: cout << "Exporting Timetable...\n"; break;
+            case 4: cout << "Exiting...\n"; return 0;
+            default: cout << "Invalid option. Try again.\n"; break;
             }
         }
     }

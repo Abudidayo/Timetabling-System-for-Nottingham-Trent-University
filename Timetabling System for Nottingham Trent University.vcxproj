@@ -130,11 +130,11 @@
     <Text Include="users.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="module.cpp" />
-    <ClCompile Include="session.cpp" />
-    <ClCompile Include="timetable.cpp" />
-    <ClCompile Include="user.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Module.cpp" />
+    <ClCompile Include="Session.cpp" />
+    <ClCompile Include="Timetable.cpp" />
+    <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Module.h" />
