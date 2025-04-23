@@ -67,7 +67,41 @@ bool registerUser(unordered_map<string, User>& users,
     return true;
 }
 
-// Show admin menu
+// Session persistence
+const string sessionFile = "sessions.txt";
+
+void saveSessionToFile(const string& filename, const Session& s) {
+    ofstream file(filename, ios::app);
+    file << s.getSessionType() << ","
+        << s.getDay() << ","
+        << s.getTime() << ","
+        << s.getRoom() << ","
+        << s.getLecturer() << ","
+        << s.getModuleCode() << "\n";
+}
+
+unordered_map<int, vector<Session>> loadSessionsFromFile(const string& filename) {
+    unordered_map<int, vector<Session>> sessions;
+    ifstream file(filename);
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string type, day, time, room, lecturer;
+        int moduleCode;
+        getline(ss, type, ',');
+        getline(ss, day, ',');
+        getline(ss, time, ',');
+        getline(ss, room, ',');
+        getline(ss, lecturer, ',');
+        ss >> moduleCode;
+        sessions[moduleCode].emplace_back(
+            type, day, time, room, lecturer, moduleCode
+        );
+    }
+    return sessions;
+}
+
+// Menus
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
         << "1. Add Module\n"
@@ -75,21 +109,20 @@ void showAdminMenu() {
         << "3. Manage Groups\n"
         << "4. View Modules\n"
         << "5. View Timetable\n"
-        << "6. Exit\n"
+        << "6. Sign Out\n"
         << "Choose an option: ";
 }
 
-// Show student menu
 void showStudentMenu() {
     cout << "\n=== Student Menu ===\n"
         << "1. View Timetable\n"
         << "2. Search Timetable\n"
         << "3. Export Timetable\n"
-        << "4. Exit\n"
+        << "4. Sign Out\n"
         << "Choose an option: ";
 }
 
-// Add a module
+// Module management
 void addModule(unordered_map<int, Module>& modules) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter module name: ";
@@ -100,7 +133,6 @@ void addModule(unordered_map<int, Module>& modules) {
     cout << "Module \"" << name << "\" (Code: " << code << ") added.\n";
 }
 
-// List all modules
 void listModules(const unordered_map<int, Module>& modules) {
     if (modules.empty()) {
         cout << "No modules available.\n";
@@ -112,15 +144,14 @@ void listModules(const unordered_map<int, Module>& modules) {
     }
 }
 
-// Create session by picking an existing module
+// Session creation
 void createSession(const unordered_map<int, Module>& modules,
-    unordered_map<int, Session>& sessions) {
+    unordered_map<int, vector<Session>>& sessions) {
     if (modules.empty()) {
         cout << "No modules available. Add a module first.\n";
         return;
     }
 
-    // Display modules
     vector<int> codes;
     cout << "\nAvailable Modules:\n";
     int idx = 1;
@@ -132,7 +163,6 @@ void createSession(const unordered_map<int, Module>& modules,
         ++idx;
     }
 
-    // Select by index
     cout << "Select a module by number: ";
     int choice; cin >> choice;
     if (cin.fail() || choice < 1 || choice >(int)codes.size()) {
@@ -143,7 +173,6 @@ void createSession(const unordered_map<int, Module>& modules,
     }
     int moduleCode = codes[choice - 1];
 
-    // Gather session details
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter session type (Lecture/Lab): ";
     string type; getline(cin, type);
@@ -156,8 +185,10 @@ void createSession(const unordered_map<int, Module>& modules,
     cout << "Enter lecturer name: ";
     string lecturer; getline(cin, lecturer);
 
-    // Store session
-    sessions[moduleCode] = Session(type, day, time, room, lecturer, moduleCode);
+    Session s(type, day, time, room, lecturer, moduleCode);
+    sessions[moduleCode].push_back(s);
+    saveSessionToFile(sessionFile, s);
+
     cout << "Session created for module code " << moduleCode << ".\n";
 }
 
@@ -166,77 +197,92 @@ int main() {
     auto users = loadUsersFromFile(userFile);
 
     unordered_map<int, Module> modules;
-    unordered_map<int, Session> sessions;
+    auto sessions = loadSessionsFromFile(sessionFile);
 
-    int choice;
     while (true) {
-        cout << "Welcome to the Timetabling System\n"
-            << "1. Login\n"
-            << "2. Register as Student\n"
-            << "Choose an option (1 or 2): ";
-        cin >> choice;
-        if (!cin.fail() && (choice == 1 || choice == 2)) {
-            break;
+        // Login/Register
+        int choice;
+        while (true) {
+            cout << "Welcome to the Timetabling System\n"
+                << "1. Login\n"
+                << "2. Register as Student\n"
+                << "Choose an option (1 or 2): ";
+            cin >> choice;
+            if (!cin.fail() && (choice == 1 || choice == 2)) break;
+            cout << "Invalid input. Please enter 1 or 2.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
-        cout << "Invalid input. Please enter 1 or 2.\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
 
-    string username, password, role;
-    if (choice == 2) {
-        cout << "New username: "; cin >> username;
-        cout << "New password: "; cin >> password;
-        if (!registerUser(users, userFile, username, password)) return 0;
-        cout << "Registration successful.\n";
-    }
+        string username, password, role;
+        if (choice == 2) {
+            cout << "New username: "; cin >> username;
+            cout << "New password: "; cin >> password;
+            if (!registerUser(users, userFile, username, password)) continue;
+            cout << "Registration successful.\n";
+        }
 
-    const int MAX_ATTEMPTS = 3;
-    int attempts = 0;
-    bool ok = false;
-    while (!ok && attempts < MAX_ATTEMPTS) {
-        cout << "Username: "; cin >> username;
-        cout << "Password: "; cin >> password;
-        if (authenticateUser(users, username, password, role)) {
-            ok = true;
+        const int MAX_ATTEMPTS = 3;
+        int attempts = 0;
+        bool ok = false;
+        while (!ok && attempts < MAX_ATTEMPTS) {
+            cout << "Username: "; cin >> username;
+            cout << "Password: "; cin >> password;
+            if (authenticateUser(users, username, password, role)) {
+                ok = true;
+            }
+            else {
+                cout << "Invalid credentials. "
+                    << (MAX_ATTEMPTS - ++attempts) << " attempts left.\n";
+            }
+        }
+        if (!ok) {
+            cout << "Too many failed attempts. Returning to main menu.\n";
+            continue;
+        }
+        cout << "Login successful! Role: " << role << "\n";
+
+        // Role-specific loop
+        if (role == "admin") {
+            while (true) {
+                showAdminMenu();
+                cin >> choice;
+                if (choice == 6) {
+                    cout << "Signing out...\n";
+                    break;  // back to login/register
+                }
+                switch (choice) {
+                case 1: addModule(modules); break;
+                case 2: createSession(modules, sessions); break;
+                case 3: cout << "Managing Groups...\n"; break;
+                case 4: listModules(modules); break;
+                case 5:
+                    cout << "\n=== All Sessions ===\n";
+                    for (auto& kv : sessions)
+                        for (auto& s : kv.second)
+                            s.printSessionDetails();
+                    break;
+                default: cout << "Invalid option.\n";
+                }
+            }
         }
         else {
-            cout << "Invalid credentials. "
-                << (MAX_ATTEMPTS - ++attempts) << " attempts left.\n";
+            while (true) {
+                showStudentMenu();
+                cin >> choice;
+                if (choice == 4) {
+                    cout << "Signing out...\n";
+                    break;
+                }
+                switch (choice) {
+                case 1: cout << "Viewing Timetable...\n"; break;
+                case 2: cout << "Searching Timetable...\n"; break;
+                case 3: cout << "Exporting Timetable...\n"; break;
+                default: cout << "Invalid option.\n";
+                }
+            }
         }
     }
-    if (!ok) {
-        cout << "Too many failed attempts. Exiting.\n";
-        return 0;
-    }
-    cout << "Login successful! Role: " << role << "\n";
 
-    if (role == "admin") {
-        while (true) {
-            showAdminMenu();
-            cin >> choice;
-            switch (choice) {
-            case 1: addModule(modules); break;
-            case 2: createSession(modules, sessions); break;
-            case 3: cout << "Managing Groups...\n"; break;
-            case 4: listModules(modules); break;
-            case 5: cout << "Viewing Timetable...\n"; break;
-            case 6: cout << "Exiting...\n"; return 0;
-            default: cout << "Invalid option.\n";
-            }
-        }
-    }
-    else {
-        while (true) {
-            showStudentMenu();
-            cin >> choice;
-            switch (choice) {
-            case 1: cout << "Viewing Timetable...\n"; break;
-            case 2: cout << "Searching Timetable...\n"; break;
-            case 3: cout << "Exporting Timetable...\n"; break;
-            case 4: cout << "Exiting...\n"; return 0;
-            default: cout << "Invalid option.\n";
-            }
-        }
-    }
+    return 0;
 }
