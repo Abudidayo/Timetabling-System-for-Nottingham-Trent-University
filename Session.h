@@ -9,19 +9,27 @@ private:
     string sessionType;  // Lecture, Lab, etc.
     string day;
     string time;
-    string roomNumber;   // New variable for the room number
-    string lecturer;     // New variable for the lecturer's name
+    string room;
+    string lecturer;
+    int moduleCode; // Associated module
 
 public:
-    // Constructor with added roomNumber and lecturer
-    Session(string sessionType, string day, string time, string roomNumber, string lecturer);
+    // Default constructor
+    Session();
+
+    // Constructor with parameters
+    Session(string sessionType, string day, string time, string room, string lecturer, int moduleCode);
 
     // Method to print session details
     void printSessionDetails() const;
 
-    // Getter methods for room number and lecturer
-    string getRoomNumber() const;
+    // Getter methods
+    string getSessionType() const;
+    int getModuleCode() const;
     string getLecturer() const;
+    string getRoom() const;
+    string getTime() const;
+    string getDay() const;
 };
 
 #endif  // SESSION_H
