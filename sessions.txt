@@ -2,3 +2,4 @@ lec,Tuesday,13,JOC006,Andreas,123
 Lab,Mondays,2pm,JOC006,Smith,123
 Lecture,Mondays,2,JOC006,smith,2
 lecture,Monday,4,MAE102,smith,123
+Lab,Monday,2PM,MAE123,John,123

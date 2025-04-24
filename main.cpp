@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include <limits>
 #include "Module.h"
@@ -171,14 +170,18 @@ void showStudentMenu() {
 }
 
 // Add a module
-void addModule(unordered_map<int, Module>& modules) {
+void addModule(unordered_map<int, Module>& modules, const string& filename) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter module name: ";
     string name; getline(cin, name);
+
     cout << "Enter module code: ";
     int code; cin >> code;
+
     modules[code] = Module(name, code);
     cout << "Module \"" << name << "\" (Code: " << code << ") added.\n";
+
+    saveModulesToFile(filename, modules);
 }
 
 // List all modules
@@ -214,7 +217,6 @@ void createSession(const unordered_map<int, Module>& modules,
         ++idx;
     }
 
-    // Select by index
     cout << "Select a module by number: ";
     int choice; cin >> choice;
     if (cin.fail() || choice < 1 || choice >(int)codes.size()) {
@@ -227,46 +229,60 @@ void createSession(const unordered_map<int, Module>& modules,
 
     // Display rooms
     cout << "\nAvailable Rooms:\n";
-    int roomIdx = 1;
-    for (const string& room : rooms) {
-        cout << "  " << roomIdx << ". " << room << "\n";
-        roomIdx++;
+    for (int i = 0; i < (int)rooms.size(); ++i) {
+        cout << "  " << (i + 1) << ". " << rooms[i] << "\n";
     }
-
     cout << "Select a room by number: ";
     int roomChoice; cin >> roomChoice;
-    if (roomChoice < 1 || roomChoice > rooms.size()) {
+    if (roomChoice < 1 || roomChoice >(int)rooms.size()) {
         cout << "Invalid room selection.\n";
         return;
     }
-
     string selectedRoom = rooms[roomChoice - 1];
 
-    // Gather session details
+    // Day-of-week selection
+    static const char* days[] = {
+        "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
+    };
+    cout << "\nSelect day:\n";
+    for (int i = 0; i < 7; ++i) {
+        cout << "  " << (i + 1) << ": " << days[i] << "\n";
+    }
+    cout << "Enter choice (1-7): ";
+    int dayChoice; cin >> dayChoice;
+    if (dayChoice < 1 || dayChoice > 7) {
+        cout << "Invalid day selection.\n";
+        return;
+    }
+    string day = days[dayChoice - 1];
+
+    // Time and lecturer
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Enter session type (Lecture/Lab): ";
-    string type; getline(cin, type);
-    cout << "Enter day of the session: ";
-    string day; getline(cin, day);
     cout << "Enter time of the session: ";
     string time; getline(cin, time);
     cout << "Enter lecturer name: ";
     string lecturer; getline(cin, lecturer);
+
+    // Session type
+    cout << "Enter session type (Lecture/Lab): ";
+    string type; getline(cin, type);
 
     // Store and save session
     Session s(type, day, time, selectedRoom, lecturer, moduleCode);
     sessions[moduleCode].push_back(s);
     saveSessionToFile(sessionFile, s);
 
-    cout << "Session created for module code " << moduleCode << " in room " << selectedRoom << ".\n";
+    cout << "Session created for module code " << moduleCode
+        << " on " << day << " at " << time
+        << " in room " << selectedRoom
+        << ", lecturer " << lecturer << ".\n";
 }
 
 // Add a room to the list
 void addRoom(vector<string>& rooms) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter room name: ";
-    string roomName;
-    getline(cin, roomName);
+    string roomName; getline(cin, roomName);
     rooms.push_back(roomName);
     saveRoomsToFile("rooms.txt", rooms);
     cout << "Room \"" << roomName << "\" added.\n";
@@ -278,22 +294,22 @@ void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
         cout << "No sessions available.\n";
         return;
     }
-
     cout << "\n=== All Sessions ===\n";
-    for (const auto& kv : sessions) {
-        for (const auto& session : kv.second) {
-            session.printSessionDetails();
+    for (auto& kv : sessions) {
+        for (auto& sess : kv.second) {
+            sess.printSessionDetails();
         }
     }
 }
 
 int main() {
     const string userFile = "users.txt";
-    auto users = loadUsersFromFile(userFile);
+    const string modulesFile = "modules.txt";
 
-    unordered_map<int, Module> modules = loadModulesFromFile("modules.txt");
+    auto users = loadUsersFromFile(userFile);
+    auto modules = loadModulesFromFile(modulesFile);
     auto sessions = loadSessionsFromFile(sessionFile);
-    vector<string> rooms = loadRoomsFromFile("rooms.txt");
+    auto rooms = loadRoomsFromFile("rooms.txt");
 
     int choice;
     while (true) {
@@ -345,23 +361,16 @@ int main() {
                 cin >> choice;
                 if (choice == 7) {
                     cout << "Signing out...\n";
-                    break;  // back to login/register
+                    break;
                 }
                 switch (choice) {
-                case 1:
-                    addModule(modules); break;
-                case 2:
-                    createSession(modules, sessions, rooms); break;
-                case 3:
-                    cout << "Managing Groups...\n"; break;
-                case 4:
-                    listModules(modules); break;
-                case 5:
-                    viewAllSessions(sessions); break;
-                case 6:
-                    addRoom(rooms); break;
-                default:
-                    cout << "Invalid option.\n";
+                case 1: addModule(modules, modulesFile); break;
+                case 2: createSession(modules, sessions, rooms); break;
+                case 3: cout << "Managing Groups...\n"; break;
+                case 4: listModules(modules); break;
+                case 5: viewAllSessions(sessions); break;
+                case 6: addRoom(rooms); break;
+                default: cout << "Invalid option.\n";
                 }
             }
         }
@@ -374,24 +383,17 @@ int main() {
                     break;
                 }
                 switch (choice) {
-                case 1:
-                    cout << "Viewing Timetable...\n";
-                    break;
-                case 2:
-                    cout << "Searching Timetable...\n";
-                    break;
-                case 3:
-                    cout << "Exporting Timetable...\n";
-                    break;
-                default:
-                    cout << "Invalid option.\n";
+                case 1: cout << "Viewing Timetable...\n"; break;
+                case 2: cout << "Searching Timetable...\n"; break;
+                case 3: cout << "Exporting Timetable...\n"; break;
+                default: cout << "Invalid option.\n";
                 }
             }
         }
     }
 
-    // Save modules, rooms, and sessions before exiting
-    saveModulesToFile("modules.txt", modules);
+    // Save modules and rooms on exit
+    saveModulesToFile(modulesFile, modules);
     saveRoomsToFile("rooms.txt", rooms);
     return 0;
 }

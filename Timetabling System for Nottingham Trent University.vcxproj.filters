@@ -24,6 +24,9 @@
     <Text Include="rooms.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="modules.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="User.cpp">
