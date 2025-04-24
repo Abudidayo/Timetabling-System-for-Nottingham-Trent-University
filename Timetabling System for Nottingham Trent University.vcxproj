@@ -127,6 +127,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="rooms.txt" />
+    <Text Include="sessions.txt" />
     <Text Include="users.txt" />
   </ItemGroup>
   <ItemGroup>

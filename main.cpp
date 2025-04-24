@@ -104,6 +104,49 @@ unordered_map<int, vector<Session>> loadSessionsFromFile(const string& filename)
     return sessions;
 }
 
+// Save modules to file
+void saveModulesToFile(const string& filename, const unordered_map<int, Module>& modules) {
+    ofstream file(filename);
+    for (auto& kv : modules) {
+        file << kv.second.getName() << "," << kv.first << "\n";
+    }
+}
+
+// Load modules from file
+unordered_map<int, Module> loadModulesFromFile(const string& filename) {
+    unordered_map<int, Module> modules;
+    ifstream file(filename);
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string name;
+        int code;
+        getline(ss, name, ',');
+        ss >> code;
+        modules[code] = Module(name, code);
+    }
+    return modules;
+}
+
+// Save rooms to file
+void saveRoomsToFile(const string& filename, const vector<string>& rooms) {
+    ofstream file(filename);
+    for (const string& room : rooms) {
+        file << room << "\n";
+    }
+}
+
+// Load rooms from file
+vector<string> loadRoomsFromFile(const string& filename) {
+    vector<string> rooms;
+    ifstream file(filename);
+    string line;
+    while (getline(file, line)) {
+        rooms.push_back(line);
+    }
+    return rooms;
+}
+
 // Show admin menu
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
@@ -111,7 +154,7 @@ void showAdminMenu() {
         << "2. Create Session\n"
         << "3. Manage Groups\n"
         << "4. View Modules\n"
-        << "5. View All Sessions\n"
+        << "5. View Timetable\n"
         << "6. Add Room\n"
         << "7. Exit\n"
         << "Choose an option: ";
@@ -225,6 +268,7 @@ void addRoom(vector<string>& rooms) {
     string roomName;
     getline(cin, roomName);
     rooms.push_back(roomName);
+    saveRoomsToFile("rooms.txt", rooms);
     cout << "Room \"" << roomName << "\" added.\n";
 }
 
@@ -247,9 +291,9 @@ int main() {
     const string userFile = "users.txt";
     auto users = loadUsersFromFile(userFile);
 
-    unordered_map<int, Module> modules;
+    unordered_map<int, Module> modules = loadModulesFromFile("modules.txt");
     auto sessions = loadSessionsFromFile(sessionFile);
-    vector<string> rooms;  // List of rooms
+    vector<string> rooms = loadRoomsFromFile("rooms.txt");
 
     int choice;
     while (true) {
@@ -304,13 +348,20 @@ int main() {
                     break;  // back to login/register
                 }
                 switch (choice) {
-                case 1: addModule(modules); break;
-                case 2: createSession(modules, sessions, rooms); break;
-                case 3: cout << "Managing Groups...\n"; break;
-                case 4: listModules(modules); break;
-                case 5: viewAllSessions(sessions); break;
-                case 6: addRoom(rooms); break;
-                default: cout << "Invalid option.\n";
+                case 1:
+                    addModule(modules); break;
+                case 2:
+                    createSession(modules, sessions, rooms); break;
+                case 3:
+                    cout << "Managing Groups...\n"; break;
+                case 4:
+                    listModules(modules); break;
+                case 5:
+                    viewAllSessions(sessions); break;
+                case 6:
+                    addRoom(rooms); break;
+                default:
+                    cout << "Invalid option.\n";
                 }
             }
         }
@@ -323,14 +374,24 @@ int main() {
                     break;
                 }
                 switch (choice) {
-                case 1: cout << "Viewing Timetable...\n"; break;
-                case 2: cout << "Searching Timetable...\n"; break;
-                case 3: cout << "Exporting Timetable...\n"; break;
-                default: cout << "Invalid option.\n";
+                case 1:
+                    cout << "Viewing Timetable...\n";
+                    break;
+                case 2:
+                    cout << "Searching Timetable...\n";
+                    break;
+                case 3:
+                    cout << "Exporting Timetable...\n";
+                    break;
+                default:
+                    cout << "Invalid option.\n";
                 }
             }
         }
     }
 
+    // Save modules, rooms, and sessions before exiting
+    saveModulesToFile("modules.txt", modules);
+    saveRoomsToFile("rooms.txt", rooms);
     return 0;
 }

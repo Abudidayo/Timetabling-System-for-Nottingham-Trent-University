@@ -18,6 +18,12 @@
     <Text Include="users.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="sessions.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="rooms.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="User.cpp">
