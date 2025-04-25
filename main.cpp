@@ -112,6 +112,20 @@ void deleteStudentGroup(const string& filename) {
     cout << "Group \"" << groupName << "\" deleted.\n";
 }
 
+// Function to view student groups
+void viewStudentGroups(const string& filename) {
+    vector<string> groups = loadStudentGroupsFromFile(filename);
+    if (groups.empty()) {
+        cout << "No student groups available.\n";
+        return;
+    }
+
+    cout << "\n=== Student Groups ===\n";
+    for (const string& group : groups) {
+        cout << "- " << group << "\n";
+    }
+}
+
 // Authenticate credentials
 bool authenticateUser(const unordered_map<string, User>& users,
     const string& username,
@@ -227,7 +241,7 @@ void showAdminMenu() {
          << "3. Manage Modules\n"
          << "4. View Timetable\n"
          << "5. Add Room\n"
-         << "6. Exit\n"
+         << "6. Exit\n" // Updated exit option
          << "Choose an option: ";
 }
 
@@ -395,7 +409,7 @@ void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
     }
 }
 
-// Update manageGroups to call the updated deleteStudentGroup function
+// Update manageGroups to include "View Student Groups"
 void manageGroups(unordered_map<string, User>& users) {
     const string groupsFile = "student_groups.txt";
     int choice;
@@ -404,7 +418,8 @@ void manageGroups(unordered_map<string, User>& users) {
              << "1. Create New Student Group\n"
              << "2. Assign Student to Group\n"
              << "3. Delete Student Group\n"
-             << "4. Back to Admin Menu\n"
+             << "4. View Student Groups\n" // New option
+             << "5. Back to Admin Menu\n"
              << "Choose an option: ";
         cin >> choice;
         if (cin.fail()) {
@@ -463,7 +478,10 @@ void manageGroups(unordered_map<string, User>& users) {
         } else if (choice == 3) {
             deleteStudentGroup(groupsFile);
 
-        } else if (choice == 4) {
+        } else if (choice == 4) { // New case for viewing student groups
+            viewStudentGroups(groupsFile);
+
+        } else if (choice == 5) {
             break;
         } else {
             cout << "Invalid option.\n";

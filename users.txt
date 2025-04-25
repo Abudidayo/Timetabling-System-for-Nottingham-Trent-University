@@ -1,4 +1,4 @@
-a,a,student,CSCI7
 admin,admin,admin,
+a,a,student,SW1
 st,st,student,
 jes,tiger123,student,CSCI5
