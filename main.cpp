@@ -77,15 +77,34 @@ void appendStudentGroup(const string& filename, const string& groupName) {
     cout << "Group \"" << groupName << "\" added.\n";
 }
 
-// New function to delete a student group
-void deleteStudentGroup(const string& filename, const string& groupName) {
+// Update deleteStudentGroup to display groups and allow selection by number
+void deleteStudentGroup(const string& filename) {
     vector<string> groups = loadStudentGroupsFromFile(filename);
-    auto it = find(groups.begin(), groups.end(), groupName);
-    if (it == groups.end()) {
-        cout << "Group \"" << groupName << "\" not found.\n";
+    if (groups.empty()) {
+        cout << "No groups available to delete.\n";
         return;
     }
-    groups.erase(it);
+
+    // Display all groups
+    cout << "\nAvailable Groups:\n";
+    for (size_t i = 0; i < groups.size(); ++i) {
+        cout << "  " << (i + 1) << ". " << groups[i] << "\n";
+    }
+
+    // Prompt user to select a group by number
+    cout << "Select a group to delete by number: ";
+    int groupChoice;
+    cin >> groupChoice;
+
+    // Validate selection
+    if (groupChoice < 1 || groupChoice > (int)groups.size()) {
+        cout << "Invalid selection.\n";
+        return;
+    }
+
+    // Delete the selected group
+    string groupName = groups[groupChoice - 1];
+    groups.erase(groups.begin() + (groupChoice - 1));
     ofstream file(filename);
     for (const string& group : groups) {
         file << group << "\n";
@@ -376,7 +395,7 @@ void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
     }
 }
 
-// Update manageGroups to include delete group option
+// Update manageGroups to call the updated deleteStudentGroup function
 void manageGroups(unordered_map<string, User>& users) {
     const string groupsFile = "student_groups.txt";
     int choice;
@@ -384,7 +403,7 @@ void manageGroups(unordered_map<string, User>& users) {
         cout << "\n--- Manage Groups ---\n"
              << "1. Create New Student Group\n"
              << "2. Assign Student to Group\n"
-             << "3. Delete Student Group\n" // New option
+             << "3. Delete Student Group\n"
              << "4. Back to Admin Menu\n"
              << "Choose an option: ";
         cin >> choice;
@@ -442,10 +461,7 @@ void manageGroups(unordered_map<string, User>& users) {
             cout << "Student \"" << chosenUser << "\" assigned to group \"" << groups[groupChoice - 1] << "\".\n";
 
         } else if (choice == 3) {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Enter group name to delete: ";
-            string groupName; getline(cin, groupName);
-            deleteStudentGroup(groupsFile, groupName);
+            deleteStudentGroup(groupsFile);
 
         } else if (choice == 4) {
             break;
@@ -455,7 +471,7 @@ void manageGroups(unordered_map<string, User>& users) {
     }
 }
 
-// New function to manage modules
+// Update manageModules to display modules and allow selection by number for deletion
 void manageModules(unordered_map<int, Module>& modules, const string& filename) {
     int choice;
     while (true) {
@@ -478,15 +494,39 @@ void manageModules(unordered_map<int, Module>& modules, const string& filename) 
                 addModule(modules, filename);
                 break;
             case 2: {
-                cout << "Enter module code to delete: ";
-                int code;
-                cin >> code;
-                if (modules.erase(code)) {
-                    cout << "Module with code " << code << " deleted.\n";
-                    saveModulesToFile(filename, modules);
-                } else {
-                    cout << "Module with code " << code << " not found.\n";
+                if (modules.empty()) {
+                    cout << "No modules available to delete.\n";
+                    break;
                 }
+
+                // Display all modules
+                cout << "\nAvailable Modules:\n";
+                vector<int> moduleCodes;
+                int idx = 1;
+                for (const auto& kv : modules) {
+                    cout << "  " << idx << ". " << kv.second.getName()
+                         << " (Code: " << kv.first << ")\n";
+                    moduleCodes.push_back(kv.first);
+                    ++idx;
+                }
+
+                // Prompt user to select a module by number
+                cout << "Select a module to delete by number: ";
+                int moduleChoice;
+                cin >> moduleChoice;
+
+                // Validate selection
+                if (moduleChoice < 1 || moduleChoice > (int)moduleCodes.size()) {
+                    cout << "Invalid selection.\n";
+                    break;
+                }
+
+                // Delete the selected module
+                int moduleCode = moduleCodes[moduleChoice - 1];
+                string moduleName = modules[moduleCode].getName();
+                modules.erase(moduleCode);
+                saveModulesToFile(filename, modules);
+                cout << "Module \"" << moduleName << "\" (Code: " << moduleCode << ") deleted.\n";
                 break;
             }
             case 3:
