@@ -65,10 +65,32 @@ vector<string> loadStudentGroupsFromFile(const string& filename) {
     return groups;
 }
 
-// New function to append new group to student_groups.txt
+// Modify appendStudentGroup to check for duplicates
 void appendStudentGroup(const string& filename, const string& groupName) {
+    vector<string> groups = loadStudentGroupsFromFile(filename);
+    if (find(groups.begin(), groups.end(), groupName) != groups.end()) {
+        cout << "Group \"" << groupName << "\" already exists.\n";
+        return;
+    }
     ofstream file(filename, ios::app);
     file << groupName << "\n";
+    cout << "Group \"" << groupName << "\" added.\n";
+}
+
+// New function to delete a student group
+void deleteStudentGroup(const string& filename, const string& groupName) {
+    vector<string> groups = loadStudentGroupsFromFile(filename);
+    auto it = find(groups.begin(), groups.end(), groupName);
+    if (it == groups.end()) {
+        cout << "Group \"" << groupName << "\" not found.\n";
+        return;
+    }
+    groups.erase(it);
+    ofstream file(filename);
+    for (const string& group : groups) {
+        file << group << "\n";
+    }
+    cout << "Group \"" << groupName << "\" deleted.\n";
 }
 
 // Authenticate credentials
@@ -181,14 +203,13 @@ vector<string> loadRoomsFromFile(const string& filename) {
 // Show admin menu
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
-        << "1. Add Module\n"
-        << "2. Create Session\n"
-        << "3. Manage Groups\n"
-        << "4. View Modules\n"
-        << "5. View Timetable\n"
-        << "6. Add Room\n"
-        << "7. Exit\n"
-        << "Choose an option: ";
+         << "1. Create Session\n"
+         << "2. Manage Groups\n"
+         << "3. Manage Modules\n"
+         << "4. View Timetable\n"
+         << "5. Add Room\n"
+         << "6. Exit\n"
+         << "Choose an option: ";
 }
 
 // Show student menu
@@ -299,15 +320,36 @@ void createSession(const unordered_map<int, Module>& modules,
     cout << "Enter session type (Lecture/Lab): ";
     string type; getline(cin, type);
 
+    // Load and display student groups
+    const string groupsFile = "student_groups.txt";
+    vector<string> groups = loadStudentGroupsFromFile(groupsFile);
+    if (groups.empty()) {
+        cout << "No student groups available. Create a group first.\n";
+        return;
+    }
+    cout << "\nAvailable Student Groups:\n";
+    for (size_t i = 0; i < groups.size(); ++i) {
+        cout << "  " << (i + 1) << ". " << groups[i] << "\n";
+    }
+    cout << "Select a group by number: ";
+    int groupChoice; cin >> groupChoice;
+    if (groupChoice < 1 || groupChoice > (int)groups.size()) {
+        cout << "Invalid group selection.\n";
+        return;
+    }
+    string selectedGroup = groups[groupChoice - 1];
+
     // Store and save session
     Session s(type, day, time, selectedRoom, lecturer, moduleCode);
+    // Associate the session with the selected group (if needed, extend Session class to include group)
     sessions[moduleCode].push_back(s);
     saveSessionToFile(sessionFile, s);
 
     cout << "Session created for module code " << moduleCode
         << " on " << day << " at " << time
         << " in room " << selectedRoom
-        << ", lecturer " << lecturer << ".\n";
+        << ", lecturer " << lecturer
+        << ", for group " << selectedGroup << ".\n";
 }
 
 // Add a room to the list
@@ -334,7 +376,7 @@ void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
     }
 }
 
-// New function for managing groups submenu
+// Update manageGroups to include delete group option
 void manageGroups(unordered_map<string, User>& users) {
     const string groupsFile = "student_groups.txt";
     int choice;
@@ -342,7 +384,8 @@ void manageGroups(unordered_map<string, User>& users) {
         cout << "\n--- Manage Groups ---\n"
              << "1. Create New Student Group\n"
              << "2. Assign Student to Group\n"
-             << "3. Back to Admin Menu\n"
+             << "3. Delete Student Group\n" // New option
+             << "4. Back to Admin Menu\n"
              << "Choose an option: ";
         cin >> choice;
         if (cin.fail()) {
@@ -355,7 +398,6 @@ void manageGroups(unordered_map<string, User>& users) {
             cout << "Enter new group name: ";
             string newGroup; getline(cin, newGroup);
             appendStudentGroup(groupsFile, newGroup);
-            cout << "Group \"" << newGroup << "\" created.\n";
 
         } else if (choice == 2) {
             // Filter student users
@@ -400,9 +442,60 @@ void manageGroups(unordered_map<string, User>& users) {
             cout << "Student \"" << chosenUser << "\" assigned to group \"" << groups[groupChoice - 1] << "\".\n";
 
         } else if (choice == 3) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Enter group name to delete: ";
+            string groupName; getline(cin, groupName);
+            deleteStudentGroup(groupsFile, groupName);
+
+        } else if (choice == 4) {
             break;
         } else {
             cout << "Invalid option.\n";
+        }
+    }
+}
+
+// New function to manage modules
+void manageModules(unordered_map<int, Module>& modules, const string& filename) {
+    int choice;
+    while (true) {
+        cout << "\n--- Manage Modules ---\n"
+             << "1. Add Module\n"
+             << "2. Delete Module\n"
+             << "3. View Modules\n"
+             << "4. Back to Admin Menu\n"
+             << "Choose an option: ";
+        cin >> choice;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please try again.\n";
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                addModule(modules, filename);
+                break;
+            case 2: {
+                cout << "Enter module code to delete: ";
+                int code;
+                cin >> code;
+                if (modules.erase(code)) {
+                    cout << "Module with code " << code << " deleted.\n";
+                    saveModulesToFile(filename, modules);
+                } else {
+                    cout << "Module with code " << code << " not found.\n";
+                }
+                break;
+            }
+            case 3:
+                listModules(modules);
+                break;
+            case 4:
+                return;
+            default:
+                cout << "Invalid option. Please try again.\n";
         }
     }
 }
@@ -421,9 +514,9 @@ int main() {
         // Login/Register
         while (true) {
             cout << "Welcome to the Timetabling System\n"
-                << "1. Login\n"
-                << "2. Register as Student\n"
-                << "Choose an option (1 or 2): ";
+                 << "1. Login\n"
+                 << "2. Register as Student\n"
+                 << "Choose an option (1 or 2): ";
             cin >> choice;
             if (!cin.fail() && (choice == 1 || choice == 2)) break;
             cout << "Invalid input. Please enter 1 or 2.\n";
@@ -433,8 +526,10 @@ int main() {
 
         string username, password, role;
         if (choice == 2) {
-            cout << "New username: "; cin >> username;
-            cout << "New password: "; cin >> password;
+            cout << "New username: ";
+            cin >> username;
+            cout << "New password: ";
+            cin >> password;
             if (!registerUser(users, userFile, username, password)) continue;
             cout << "Registration successful.\n";
         }
@@ -443,14 +538,15 @@ int main() {
         int attempts = 0;
         bool ok = false;
         while (!ok && attempts < MAX_ATTEMPTS) {
-            cout << "Username: "; cin >> username;
-            cout << "Password: "; cin >> password;
+            cout << "Username: ";
+            cin >> username;
+            cout << "Password: ";
+            cin >> password;
             if (authenticateUser(users, username, password, role)) {
                 ok = true;
-            }
-            else {
+            } else {
                 cout << "Invalid credentials. "
-                    << (MAX_ATTEMPTS - ++attempts) << " attempts left.\n";
+                     << (MAX_ATTEMPTS - ++attempts) << " attempts left.\n";
             }
         }
         if (!ok) {
@@ -464,25 +560,31 @@ int main() {
             while (true) {
                 showAdminMenu();
                 cin >> choice;
-                if (choice == 7) {
+                if (choice == 6) { // Updated exit option
                     cout << "Signing out...\n";
                     break;
                 }
                 switch (choice) {
-                case 1: addModule(modules, modulesFile); break;
-                case 2: createSession(modules, sessions, rooms); break;
-                case 3:
-                    // Update manage groups option to call our new function
-                    manageGroups(users);
-                    break;
-                case 4: listModules(modules); break;
-                case 5: viewAllSessions(sessions); break;
-                case 6: addRoom(rooms); break;
-                default: cout << "Invalid option.\n";
+                    case 1:
+                        createSession(modules, sessions, rooms);
+                        break;
+                    case 2:
+                        manageGroups(users);
+                        break;
+                    case 3:
+                        manageModules(modules, modulesFile);
+                        break;
+                    case 4:
+                        viewAllSessions(sessions);
+                        break;
+                    case 5:
+                        addRoom(rooms);
+                        break;
+                    default:
+                        cout << "Invalid option.\n";
                 }
             }
-        }
-        else {
+        } else {
             while (true) {
                 showStudentMenu();
                 cin >> choice;
@@ -491,10 +593,17 @@ int main() {
                     break;
                 }
                 switch (choice) {
-                case 1: cout << "Viewing Timetable...\n"; break;
-                case 2: cout << "Searching Timetable...\n"; break;
-                case 3: cout << "Exporting Timetable...\n"; break;
-                default: cout << "Invalid option.\n";
+                    case 1:
+                        cout << "Viewing Timetable...\n";
+                        break;
+                    case 2:
+                        cout << "Searching Timetable...\n";
+                        break;
+                    case 3:
+                        cout << "Exporting Timetable...\n";
+                        break;
+                    default:
+                        cout << "Invalid option.\n";
                 }
             }
         }

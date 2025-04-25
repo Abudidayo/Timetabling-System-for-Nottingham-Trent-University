@@ -1,1 +1,1 @@
-system sw,123
+sys sw,123

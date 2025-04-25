@@ -1,0 +1,1 @@
+Lecture,Monday,14:00-16:00,MAE123,Smith,123
