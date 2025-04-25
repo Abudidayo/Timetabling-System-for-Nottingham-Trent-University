@@ -130,6 +130,7 @@
     <Text Include="modules.txt" />
     <Text Include="rooms.txt" />
     <Text Include="sessions.txt" />
+    <Text Include="student_groups.txt" />
     <Text Include="users.txt" />
   </ItemGroup>
   <ItemGroup>

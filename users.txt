@@ -1,4 +1,4 @@
-admin,admin,admin
-st,st,student
-a,a,student
-jes,tiger123,student
+admin,admin,admin,
+a,a,student,AI3
+st,st,student,
+jes,tiger123,student,CSCI5
