@@ -236,12 +236,12 @@ vector<string> loadRoomsFromFile(const string& filename) {
 // Show admin menu
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
-         << "1. Create Session\n"
+         << "1. Manage Sessions\n"       // Updated option
          << "2. Manage Groups\n"
          << "3. Manage Modules\n"
          << "4. View Timetable\n"
          << "5. Add Room\n"
-         << "6. Exit\n" // Updated exit option
+         << "6. Exit\n"
          << "Choose an option: ";
 }
 
@@ -558,6 +558,86 @@ void manageModules(unordered_map<int, Module>& modules, const string& filename) 
     }
 }
 
+// Helper function to update sessions file after deletion
+void updateSessionsFile(const string& filename, const unordered_map<int, vector<Session>>& sessions) {
+    ofstream file(filename);
+    // Rewrite the sessions file based on the current sessions map
+    for (const auto& kv : sessions) {
+        for (const Session& s : kv.second) {
+            file << s.getSessionType() << ","
+                 << s.getDay() << ","
+                 << s.getTime() << ","
+                 << s.getRoom() << ","
+                 << s.getLecturer() << ","
+                 << s.getModuleCode() << "\n";
+        }
+    }
+}
+
+// New function to manage sessions (create and delete)
+void manageSessions(const unordered_map<int, Module>& modules,
+                    unordered_map<int, vector<Session>>& sessions,
+                    vector<string>& rooms) {
+    int choice;
+    while (true) {
+        cout << "\n=== Manage Sessions ===\n"
+             << "1. Create Session\n"
+             << "2. Delete Session\n"
+             << "3. Back to Admin Menu\n"
+             << "Choose an option: ";
+        cin >> choice;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        if (choice == 1) {
+            // Use existing createSession function
+            createSession(modules, sessions, rooms);
+        } else if (choice == 2) {
+            // List all sessions with an index for deletion
+            vector<pair<int, int>> sessionIndex; // pair: <moduleCode, session vector index>
+            int listIndex = 1;
+            for (auto& kv : sessions) {
+                for (size_t j = 0; j < kv.second.size(); ++j) {
+                    cout << listIndex << ". Module " << kv.first << " - "
+                         << kv.second[j].getSessionType() << " on "
+                         << kv.second[j].getDay() << " at " << kv.second[j].getTime()
+                         << " in room " << kv.second[j].getRoom() << "\n";
+                    sessionIndex.push_back({kv.first, j});
+                    listIndex++;
+                }
+            }
+            if (sessionIndex.empty()) {
+                cout << "No sessions available to delete.\n";
+                continue;
+            }
+            cout << "Select a session to delete by number: ";
+            int delChoice;
+            cin >> delChoice;
+            if (delChoice < 1 || delChoice > (int)sessionIndex.size()) {
+                cout << "Invalid selection.\n";
+                continue;
+            }
+            int modCode = sessionIndex[delChoice - 1].first;
+            int sessIdx = sessionIndex[delChoice - 1].second;
+            // Prepare a confirmation message
+            string sessionInfo = sessions[modCode][sessIdx].getSessionType() + " session for module " +
+                                 to_string(modCode);
+            sessions[modCode].erase(sessions[modCode].begin() + sessIdx);
+            if (sessions[modCode].empty()) {
+                sessions.erase(modCode);
+            }
+            updateSessionsFile(sessionFile, sessions);
+            cout << "Deleted " << sessionInfo << ".\n";
+        } else if (choice == 3) {
+            break;
+        } else {
+            cout << "Invalid option.\n";
+        }
+    }
+}
+
 int main() {
     const string userFile = "users.txt";
     const string modulesFile = "modules.txt";
@@ -618,13 +698,13 @@ int main() {
             while (true) {
                 showAdminMenu();
                 cin >> choice;
-                if (choice == 6) { // Updated exit option
+                if (choice == 6) { // Exit option
                     cout << "Signing out...\n";
                     break;
                 }
                 switch (choice) {
                     case 1:
-                        createSession(modules, sessions, rooms);
+                        manageSessions(modules, sessions, rooms); // Updated: call manageSessions
                         break;
                     case 2:
                         manageGroups(users);
