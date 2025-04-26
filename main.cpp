@@ -230,11 +230,11 @@ vector<string> loadRoomsFromFile(const string& filename) {
 // Show admin menu
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
-         << "1. Manage Sessions\n"       // Updated option
+         << "1. Manage Sessions\n"
          << "2. Manage Groups\n"
          << "3. Manage Modules\n"
-         << "4. View All Sessions\n"
-         << "5. Add Room\n"
+         << "4. Manage Rooms\n" // Updated order
+         << "5. View All Sessions\n" // Moved to after "Manage Rooms"
          << "6. Exit\n"
          << "Choose an option: ";
 }
@@ -624,6 +624,83 @@ void manageSessions(const unordered_map<string, Module>& modules,
     }
 }
 
+// New function to manage rooms
+void manageRooms(vector<string>& rooms) {
+    int choice;
+    while (true) {
+        cout << "\n--- Manage Rooms ---\n"
+             << "1. Add Room\n"
+             << "2. Delete Room\n"
+             << "3. View All Rooms\n"
+             << "4. Back to Admin Menu\n"
+             << "Choose an option: ";
+        cin >> choice;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please try again.\n";
+            continue;
+        }
+
+        switch (choice) {
+            case 1: { // Add Room
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Enter room name: ";
+                string roomName; getline(cin, roomName);
+                rooms.push_back(roomName);
+                saveRoomsToFile("rooms.txt", rooms);
+                cout << "Room \"" << roomName << "\" added.\n";
+                break;
+            }
+            case 2: { // Delete Room
+                if (rooms.empty()) {
+                    cout << "No rooms available to delete.\n";
+                    break;
+                }
+
+                // Display all rooms
+                cout << "\nAvailable Rooms:\n";
+                for (size_t i = 0; i < rooms.size(); ++i) {
+                    cout << "  " << (i + 1) << ". " << rooms[i] << "\n";
+                }
+
+                // Prompt user to select a room by number
+                cout << "Select a room to delete by number: ";
+                int roomChoice;
+                cin >> roomChoice;
+
+                // Validate selection
+                if (roomChoice < 1 || roomChoice > (int)rooms.size()) {
+                    cout << "Invalid selection.\n";
+                    break;
+                }
+
+                // Delete the selected room
+                string roomName = rooms[roomChoice - 1];
+                rooms.erase(rooms.begin() + (roomChoice - 1));
+                saveRoomsToFile("rooms.txt", rooms);
+                cout << "Room \"" << roomName << "\" deleted.\n";
+                break;
+            }
+            case 3: { // View All Rooms
+                if (rooms.empty()) {
+                    cout << "No rooms available.\n";
+                    break;
+                }
+                cout << "\n=== List of Rooms ===\n";
+                for (const string& room : rooms) {
+                    cout << "- " << room << "\n";
+                }
+                break;
+            }
+            case 4: // Back to Admin Menu
+                return;
+            default:
+                cout << "Invalid option. Please try again.\n";
+        }
+    }
+}
+
 int main() {
     const string userFile = "users.txt";
     const string modulesFile = "modules.txt";
@@ -690,7 +767,7 @@ int main() {
                 }
                 switch (choice) {
                     case 1:
-                        manageSessions(modules, sessions, rooms); // Updated: call manageSessions
+                        manageSessions(modules, sessions, rooms);
                         break;
                     case 2:
                         manageGroups(users);
@@ -699,10 +776,10 @@ int main() {
                         manageModules(modules, modulesFile);
                         break;
                     case 4:
-                        viewAllSessions(sessions);
+                        manageRooms(rooms); // Updated: now option 4
                         break;
                     case 5:
-                        addRoom(rooms);
+                        viewAllSessions(sessions); // Updated: now option 5
                         break;
                     default:
                         cout << "Invalid option.\n";
