@@ -3,23 +3,23 @@
 
 // Default constructor implementation (initializing with empty/default values)
 Session::Session()
-    : sessionType(""), day(""), time(""), room(""), lecturer(""), moduleCode(0) {
+    : sessionType(""), day(""), time(""), room(""), lecturer(""), moduleName("") {
 }
 
 // Constructor with parameters implementation
-Session::Session(string sessionType, string day, string time, string room, string lecturer, int moduleCode)
-    : sessionType(sessionType), day(day), time(time), room(room), lecturer(lecturer), moduleCode(moduleCode) {
+Session::Session(string sessionType, string day, string time, string room, string lecturer, string moduleName)
+    : sessionType(sessionType), day(day), time(time), room(room), lecturer(lecturer), moduleName(moduleName) {
 }
 
 // Method to print session details
 void Session::printSessionDetails() const {
     cout << "Session Type: " << sessionType << ", Day: " << day << ", Time: " << time
-        << ", Room: " << room << ", Lecturer: " << lecturer << ", Module Code: " << moduleCode << endl;
+        << ", Room: " << room << ", Lecturer: " << lecturer << ", Module Name: " << moduleName << endl;
 }
 
 // Getter methods
 string Session::getSessionType() const { return sessionType; }
-int Session::getModuleCode() const { return moduleCode; }
+string Session::getModuleName() const { return moduleName; }
 string Session::getLecturer() const { return lecturer; }
 string Session::getRoom() const { return room; }
 string Session::getTime() const { return time; }

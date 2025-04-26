@@ -1,1 +1,1 @@
-Lecture,Monday,14:00-16:00,MAE123,Smith,123
+Lecture,Monday,12:00-14:00,ADA102,Andreas,System Software

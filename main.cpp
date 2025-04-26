@@ -165,51 +165,45 @@ void saveSessionToFile(const string& filename, const Session& s) {
         << s.getTime() << ","
         << s.getRoom() << ","
         << s.getLecturer() << ","
-        << s.getModuleCode() << "\n";
+        << s.getModuleName() << "\n";
 }
 
 // Load sessions from file
-unordered_map<int, vector<Session>> loadSessionsFromFile(const string& filename) {
-    unordered_map<int, vector<Session>> sessions;
+unordered_map<string, vector<Session>> loadSessionsFromFile(const string& filename) {
+    unordered_map<string, vector<Session>> sessions;
     ifstream file(filename);
     string line;
     while (getline(file, line)) {
         stringstream ss(line);
-        string type, day, time, room, lecturer;
-        int moduleCode;
+        string type, day, time, room, lecturer, moduleName;
         getline(ss, type, ',');
         getline(ss, day, ',');
         getline(ss, time, ',');
         getline(ss, room, ',');
         getline(ss, lecturer, ',');
-        ss >> moduleCode;
-        sessions[moduleCode].emplace_back(
-            type, day, time, room, lecturer, moduleCode
+        getline(ss, moduleName, ',');
+        sessions[moduleName].emplace_back(
+            type, day, time, room, lecturer, moduleName
         );
     }
     return sessions;
 }
 
 // Save modules to file
-void saveModulesToFile(const string& filename, const unordered_map<int, Module>& modules) {
+void saveModulesToFile(const string& filename, const unordered_map<string, Module>& modules) {
     ofstream file(filename);
     for (auto& kv : modules) {
-        file << kv.second.getName() << "," << kv.first << "\n";
+        file << kv.second.getName() << "\n";
     }
 }
 
 // Load modules from file
-unordered_map<int, Module> loadModulesFromFile(const string& filename) {
-    unordered_map<int, Module> modules;
+unordered_map<string, Module> loadModulesFromFile(const string& filename) {
+    unordered_map<string, Module> modules;
     ifstream file(filename);
     string line;
     while (getline(file, line)) {
-        stringstream ss(line);
-        string name;
-        int code;
-        getline(ss, name, ',');
-        ss >> code;
-        modules[code] = Module(name, code);
+        modules[line] = Module(line);
     }
     return modules;
 }
@@ -239,7 +233,7 @@ void showAdminMenu() {
          << "1. Manage Sessions\n"       // Updated option
          << "2. Manage Groups\n"
          << "3. Manage Modules\n"
-         << "4. View Timetable\n"
+         << "4. View All Sessions\n"
          << "5. Add Room\n"
          << "6. Exit\n"
          << "Choose an option: ";
@@ -248,7 +242,7 @@ void showAdminMenu() {
 // Show student menu
 void showStudentMenu() {
     cout << "\n=== Student Menu ===\n"
-        << "1. View Timetable\n"
+        << "1. View All Sessions\n"
         << "2. Search Timetable\n"
         << "3. Export Timetable\n"
         << "4. Exit\n"
@@ -256,22 +250,19 @@ void showStudentMenu() {
 }
 
 // Add a module
-void addModule(unordered_map<int, Module>& modules, const string& filename) {
+void addModule(unordered_map<string, Module>& modules, const string& filename) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter module name: ";
     string name; getline(cin, name);
 
-    cout << "Enter module code: ";
-    int code; cin >> code;
-
-    modules[code] = Module(name, code);
-    cout << "Module \"" << name << "\" (Code: " << code << ") added.\n";
+    modules[name] = Module(name);
+    cout << "Module \"" << name << "\" added.\n";
 
     saveModulesToFile(filename, modules);
 }
 
 // List all modules
-void listModules(const unordered_map<int, Module>& modules) {
+void listModules(const unordered_map<string, Module>& modules) {
     if (modules.empty()) {
         cout << "No modules available.\n";
         return;
@@ -283,8 +274,8 @@ void listModules(const unordered_map<int, Module>& modules) {
 }
 
 // Create session by picking an existing module
-void createSession(const unordered_map<int, Module>& modules,
-    unordered_map<int, vector<Session>>& sessions,
+void createSession(const unordered_map<string, Module>& modules,
+    unordered_map<string, vector<Session>>& sessions,
     vector<string>& rooms) {
     if (modules.empty()) {
         cout << "No modules available. Add a module first.\n";
@@ -292,26 +283,24 @@ void createSession(const unordered_map<int, Module>& modules,
     }
 
     // Display modules
-    vector<int> codes;
+    vector<string> names;
     cout << "\nAvailable Modules:\n";
     int idx = 1;
     for (auto& kv : modules) {
-        cout << "  " << idx << ". "
-            << kv.second.getName()
-            << " (Code: " << kv.first << ")\n";
-        codes.push_back(kv.first);
+        cout << "  " << idx << ". " << kv.second.getName() << "\n";
+        names.push_back(kv.first);
         ++idx;
     }
 
     cout << "Select a module by number: ";
     int choice; cin >> choice;
-    if (cin.fail() || choice < 1 || choice >(int)codes.size()) {
+    if (cin.fail() || choice < 1 || choice > (int)names.size()) {
         cout << "Invalid selection.\n";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         return;
     }
-    int moduleCode = codes[choice - 1];
+    string moduleName = names[choice - 1];
 
     // Display rooms
     cout << "\nAvailable Rooms:\n";
@@ -320,7 +309,7 @@ void createSession(const unordered_map<int, Module>& modules,
     }
     cout << "Select a room by number: ";
     int roomChoice; cin >> roomChoice;
-    if (roomChoice < 1 || roomChoice >(int)rooms.size()) {
+    if (roomChoice < 1 || roomChoice > (int)rooms.size()) {
         cout << "Invalid room selection.\n";
         return;
     }
@@ -373,13 +362,12 @@ void createSession(const unordered_map<int, Module>& modules,
     string selectedGroup = groups[groupChoice - 1];
 
     // Store and save session
-    Session s(type, day, time, selectedRoom, lecturer, moduleCode);
-    // Associate the session with the selected group (if needed, extend Session class to include group)
-    sessions[moduleCode].push_back(s);
+    Session s(type, day, time, selectedRoom, lecturer, moduleName);
+    sessions[moduleName].push_back(s);
     saveSessionToFile(sessionFile, s);
 
-    cout << "Session created for module code " << moduleCode
-        << " on " << day << " at " << time
+    cout << "Session created for module \"" << moduleName
+        << "\" on " << day << " at " << time
         << " in room " << selectedRoom
         << ", lecturer " << lecturer
         << ", for group " << selectedGroup << ".\n";
@@ -396,7 +384,7 @@ void addRoom(vector<string>& rooms) {
 }
 
 // View all sessions
-void viewAllSessions(const unordered_map<int, vector<Session>>& sessions) {
+void viewAllSessions(const unordered_map<string, vector<Session>>& sessions) {
     if (sessions.empty()) {
         cout << "No sessions available.\n";
         return;
@@ -490,7 +478,7 @@ void manageGroups(unordered_map<string, User>& users) {
 }
 
 // Update manageModules to display modules and allow selection by number for deletion
-void manageModules(unordered_map<int, Module>& modules, const string& filename) {
+void manageModules(unordered_map<string, Module>& modules, const string& filename) {
     int choice;
     while (true) {
         cout << "\n--- Manage Modules ---\n"
@@ -519,12 +507,11 @@ void manageModules(unordered_map<int, Module>& modules, const string& filename) 
 
                 // Display all modules
                 cout << "\nAvailable Modules:\n";
-                vector<int> moduleCodes;
+                vector<string> moduleNames;
                 int idx = 1;
                 for (const auto& kv : modules) {
-                    cout << "  " << idx << ". " << kv.second.getName()
-                         << " (Code: " << kv.first << ")\n";
-                    moduleCodes.push_back(kv.first);
+                    cout << "  " << idx << ". " << kv.second.getName() << "\n";
+                    moduleNames.push_back(kv.first);
                     ++idx;
                 }
 
@@ -534,17 +521,16 @@ void manageModules(unordered_map<int, Module>& modules, const string& filename) 
                 cin >> moduleChoice;
 
                 // Validate selection
-                if (moduleChoice < 1 || moduleChoice > (int)moduleCodes.size()) {
+                if (moduleChoice < 1 || moduleChoice > (int)moduleNames.size()) {
                     cout << "Invalid selection.\n";
                     break;
                 }
 
                 // Delete the selected module
-                int moduleCode = moduleCodes[moduleChoice - 1];
-                string moduleName = modules[moduleCode].getName();
-                modules.erase(moduleCode);
+                string moduleName = moduleNames[moduleChoice - 1];
+                modules.erase(moduleName);
                 saveModulesToFile(filename, modules);
-                cout << "Module \"" << moduleName << "\" (Code: " << moduleCode << ") deleted.\n";
+                cout << "Module \"" << moduleName << "\" deleted.\n";
                 break;
             }
             case 3:
@@ -559,7 +545,7 @@ void manageModules(unordered_map<int, Module>& modules, const string& filename) 
 }
 
 // Helper function to update sessions file after deletion
-void updateSessionsFile(const string& filename, const unordered_map<int, vector<Session>>& sessions) {
+void updateSessionsFile(const string& filename, const unordered_map<string, vector<Session>>& sessions) {
     ofstream file(filename);
     // Rewrite the sessions file based on the current sessions map
     for (const auto& kv : sessions) {
@@ -569,14 +555,14 @@ void updateSessionsFile(const string& filename, const unordered_map<int, vector<
                  << s.getTime() << ","
                  << s.getRoom() << ","
                  << s.getLecturer() << ","
-                 << s.getModuleCode() << "\n";
+                 << s.getModuleName() << "\n";
         }
     }
 }
 
 // New function to manage sessions (create and delete)
-void manageSessions(const unordered_map<int, Module>& modules,
-                    unordered_map<int, vector<Session>>& sessions,
+void manageSessions(const unordered_map<string, Module>& modules,
+                    unordered_map<string, vector<Session>>& sessions,
                     vector<string>& rooms) {
     int choice;
     while (true) {
@@ -596,7 +582,7 @@ void manageSessions(const unordered_map<int, Module>& modules,
             createSession(modules, sessions, rooms);
         } else if (choice == 2) {
             // List all sessions with an index for deletion
-            vector<pair<int, int>> sessionIndex; // pair: <moduleCode, session vector index>
+            vector<pair<string, int>> sessionIndex; // pair: <moduleName, session vector index>
             int listIndex = 1;
             for (auto& kv : sessions) {
                 for (size_t j = 0; j < kv.second.size(); ++j) {
@@ -619,14 +605,14 @@ void manageSessions(const unordered_map<int, Module>& modules,
                 cout << "Invalid selection.\n";
                 continue;
             }
-            int modCode = sessionIndex[delChoice - 1].first;
+            string modName = sessionIndex[delChoice - 1].first;
             int sessIdx = sessionIndex[delChoice - 1].second;
             // Prepare a confirmation message
-            string sessionInfo = sessions[modCode][sessIdx].getSessionType() + " session for module " +
-                                 to_string(modCode);
-            sessions[modCode].erase(sessions[modCode].begin() + sessIdx);
-            if (sessions[modCode].empty()) {
-                sessions.erase(modCode);
+            string sessionInfo = sessions[modName][sessIdx].getSessionType() + " session for module " +
+                                 modName;
+            sessions[modName].erase(sessions[modName].begin() + sessIdx);
+            if (sessions[modName].empty()) {
+                sessions.erase(modName);
             }
             updateSessionsFile(sessionFile, sessions);
             cout << "Deleted " << sessionInfo << ".\n";
