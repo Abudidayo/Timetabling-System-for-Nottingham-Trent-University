@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 #include "Session.h"
 #include "Module.h"
 
@@ -53,5 +54,11 @@ void viewAllSessions(const std::unordered_map<std::string, std::vector<Session>>
 void manageSessions(const std::unordered_map<std::string, Module>& modules,
                     std::unordered_map<std::string, std::vector<Session>>& sessions,
                     std::vector<std::string>& rooms);
+
+// Room management functions
+void saveRoomsToFile(const string& filename, const vector<string>& rooms);
+vector<string> loadRoomsFromFile(const string& filename);
+void addRoom(vector<string>& rooms);
+void manageRooms(vector<string>& rooms);
 
 #endif  // SESSION_H
