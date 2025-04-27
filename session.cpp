@@ -9,7 +9,6 @@
 // Default constructor
 Session::Session() 
     : sessionType(""), day(""), time(""), room(""), lecturer(""), moduleName(""), studentGroup(""), startingWeek(0), endingWeek(0) {
-    // default constructor
 }
 
 // Constructor with additional student group and week parameters
@@ -70,9 +69,9 @@ std::unordered_map<std::string, std::vector<Session>> loadSessionsFromFile(const
         std::getline(ss, room, ',');
         std::getline(ss, lecturer, ',');
         std::getline(ss, moduleName, ',');
-        std::getline(ss, studentGroup, ','); // Read student group
-        std::getline(ss, startWeekStr, ',');   // Read starting week
-        std::getline(ss, endWeekStr, ',');       // Read ending week
+        std::getline(ss, studentGroup, ',');
+        std::getline(ss, startWeekStr, ',');
+        std::getline(ss, endWeekStr, ',');
         int startWeek = startWeekStr.empty() ? 0 : std::stoi(startWeekStr);
         int endWeek = endWeekStr.empty() ? 0 : std::stoi(endWeekStr);
         sessions[moduleName].emplace_back(type, day, time, room, lecturer, moduleName, studentGroup, startWeek, endWeek);
