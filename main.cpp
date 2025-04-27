@@ -157,7 +157,7 @@ bool registerUser(unordered_map<string, User>& users,
 // Session file name
 const string sessionFile = "sessions.txt";
 
-// Save a session to file
+// Updated function to save a session to file with week numbers
 void saveSessionToFile(const string& filename, const Session& s) {
     ofstream file(filename, ios::app);
     file << s.getSessionType() << ","
@@ -166,17 +166,19 @@ void saveSessionToFile(const string& filename, const Session& s) {
          << s.getRoom() << ","
          << s.getLecturer() << ","
          << s.getModuleName() << ","
-         << s.getStudentGroup() << "\n"; // Include student group
+         << s.getStudentGroup() << ","
+         << s.getStartingWeek() << ","
+         << s.getEndingWeek() << "\n"; // Include week numbers
 }
 
-// Load sessions from file
+// Updated loadSessionsFromFile to read week numbers
 unordered_map<string, vector<Session>> loadSessionsFromFile(const string& filename) {
     unordered_map<string, vector<Session>> sessions;
     ifstream file(filename);
     string line;
     while (getline(file, line)) {
         stringstream ss(line);
-        string type, day, time, room, lecturer, moduleName, studentGroup;
+        string type, day, time, room, lecturer, moduleName, studentGroup, startWeekStr, endWeekStr;
         getline(ss, type, ',');
         getline(ss, day, ',');
         getline(ss, time, ',');
@@ -184,7 +186,11 @@ unordered_map<string, vector<Session>> loadSessionsFromFile(const string& filena
         getline(ss, lecturer, ',');
         getline(ss, moduleName, ',');
         getline(ss, studentGroup, ','); // Read student group
-        sessions[moduleName].emplace_back(type, day, time, room, lecturer, moduleName, studentGroup);
+        getline(ss, startWeekStr, ',');   // Read starting week
+        getline(ss, endWeekStr, ',');       // Read ending week
+        int startWeek = startWeekStr.empty() ? 0 : std::stoi(startWeekStr);
+        int endWeek = endWeekStr.empty() ? 0 : std::stoi(endWeekStr);
+        sessions[moduleName].emplace_back(type, day, time, room, lecturer, moduleName, studentGroup, startWeek, endWeek);
     }
     return sessions;
 }
@@ -361,8 +367,18 @@ void createSession(const unordered_map<string, Module>& modules,
     }
     string selectedGroup = groups[groupChoice - 1];
 
-    // Store and save session
-    Session s(type, day, time, selectedRoom, lecturer, moduleName, selectedGroup);
+    // Prompt for starting and ending week numbers
+    cout << "Enter starting week number: ";
+    int startingWeek; cin >> startingWeek;
+    cout << "Enter ending week number: ";
+    int endingWeek; cin >> endingWeek;
+    if(cin.fail() || startingWeek < 1 || endingWeek < startingWeek) {
+        cout << "Invalid week numbers provided.\n";
+        return;
+    }
+
+    // Store and save session with week numbers
+    Session s(type, day, time, selectedRoom, lecturer, moduleName, selectedGroup, startingWeek, endingWeek);
     sessions[moduleName].push_back(s);
     saveSessionToFile(sessionFile, s);
 
@@ -370,7 +386,8 @@ void createSession(const unordered_map<string, Module>& modules,
          << "\" on " << day << " at " << time
          << " in room " << selectedRoom
          << ", lecturer " << lecturer
-         << ", for group " << selectedGroup << ".\n";
+         << ", for group " << selectedGroup
+         << ", Weeks " << startingWeek << " to " << endingWeek << ".\n";
 }
 
 // Add a room to the list
@@ -556,7 +573,9 @@ void updateSessionsFile(const string& filename, const unordered_map<string, vect
                  << s.getRoom() << ","
                  << s.getLecturer() << ","
                  << s.getModuleName() << ","
-                 << s.getStudentGroup() << "\n"; // Include student group
+                 << s.getStudentGroup() << ","
+                 << s.getStartingWeek() << ","
+                 << s.getEndingWeek() << "\n"; // Include week numbers
         }
     }
 }

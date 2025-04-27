@@ -1,0 +1,2 @@
+Lab,Monday,12-3,MAE102,Smith,Database,CS1,1,32
+Lab,Tuesday,3,MAE102,Ekithir,Database,CS1,3,42

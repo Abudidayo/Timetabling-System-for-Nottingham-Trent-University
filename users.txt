@@ -1,2 +1,3 @@
 a,a,student,CS1
 admin,admin,admin,
+o,o,student,
