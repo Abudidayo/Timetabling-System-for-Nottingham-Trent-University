@@ -12,8 +12,6 @@
 
 using namespace std;
 
-const std::string sessionFile = "sessions.txt";
-
 // Displays the admin menu.
 void showAdminMenu() {
     cout << "\n=== Admin Menu ===\n"
@@ -26,24 +24,22 @@ void showAdminMenu() {
          << "Choose an option: ";
 }
 
-// Displays the student menu.
+// Updated student menu display without Search and Export options.
 void showStudentMenu() {
     cout << "\n=== Student Menu ===\n"
          << "1. View Timetable by Week\n"
-         << "2. Search Timetable\n"
-         << "3. Export Timetable\n"
-         << "4. Exit\n"
+         << "2. Exit\n"
          << "Choose an option: ";
 }
 
 int main() {
     const string userFile = "users.txt";
     const string modulesFile = "modules.txt";
+    const std::string sessionFile = "sessions.txt";
 
     auto users = loadUsersFromFile(userFile);
     auto modules = loadModulesFromFile(modulesFile);
     auto sessions = loadSessionsFromFile(sessionFile);
-    // Now using room functions from session.cpp
     auto rooms = loadRoomsFromFile("rooms.txt");
 
     int choice;
@@ -124,19 +120,13 @@ int main() {
             while (true) {
                 showStudentMenu();
                 cin >> choice;
-                if (choice == 4) {
+                if (choice == 2) {
                     cout << "Signing out...\n";
                     break;
                 }
                 switch (choice) {
                     case 1:
                         viewStudentTimetable(sessions, users[username].group);
-                        break;
-                    case 2:
-                        cout << "Searching Timetable...\n";
-                        break;
-                    case 3:
-                        cout << "Exporting Timetable...\n";
                         break;
                     default:
                         cout << "Invalid option.\n";
