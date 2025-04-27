@@ -8,8 +8,11 @@
 #include "Module.h"
 #include "Session.h"
 #include "User.h"
+#include "session.h"  // Include session management declarations
 
 using namespace std;
+
+const std::string sessionFile = "sessions.txt"; // Added sessionFile definition
 
 // Removed the definitions of the following functions:
 // - loadUsersFromFile
@@ -91,47 +94,6 @@ void viewStudentGroups(const string& filename) {
     for (const string& group : groups) {
         cout << "- " << group << "\n";
     }
-}
-
-// Session file name
-const string sessionFile = "sessions.txt";
-
-// Updated function to save a session to file with week numbers
-void saveSessionToFile(const string& filename, const Session& s) {
-    ofstream file(filename, ios::app);
-    file << s.getSessionType() << ","
-         << s.getDay() << ","
-         << s.getTime() << ","
-         << s.getRoom() << ","
-         << s.getLecturer() << ","
-         << s.getModuleName() << ","
-         << s.getStudentGroup() << ","
-         << s.getStartingWeek() << ","
-         << s.getEndingWeek() << "\n"; // Include week numbers
-}
-
-// Updated loadSessionsFromFile to read week numbers
-unordered_map<string, vector<Session>> loadSessionsFromFile(const string& filename) {
-    unordered_map<string, vector<Session>> sessions;
-    ifstream file(filename);
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string type, day, time, room, lecturer, moduleName, studentGroup, startWeekStr, endWeekStr;
-        getline(ss, type, ',');
-        getline(ss, day, ',');
-        getline(ss, time, ',');
-        getline(ss, room, ',');
-        getline(ss, lecturer, ',');
-        getline(ss, moduleName, ',');
-        getline(ss, studentGroup, ','); // Read student group
-        getline(ss, startWeekStr, ',');   // Read starting week
-        getline(ss, endWeekStr, ',');       // Read ending week
-        int startWeek = startWeekStr.empty() ? 0 : std::stoi(startWeekStr);
-        int endWeek = endWeekStr.empty() ? 0 : std::stoi(endWeekStr);
-        sessions[moduleName].emplace_back(type, day, time, room, lecturer, moduleName, studentGroup, startWeek, endWeek);
-    }
-    return sessions;
 }
 
 // Save modules to file
@@ -218,117 +180,6 @@ void listModules(const unordered_map<string, Module>& modules) {
     }
 }
 
-// Create session by picking an existing module
-void createSession(const unordered_map<string, Module>& modules,
-                   unordered_map<string, vector<Session>>& sessions,
-                   vector<string>& rooms) {
-    if (modules.empty()) {
-        cout << "No modules available. Add a module first.\n";
-        return;
-    }
-
-    // Display modules
-    vector<string> names;
-    cout << "\nAvailable Modules:\n";
-    int idx = 1;
-    for (auto& kv : modules) {
-        cout << "  " << idx << ". " << kv.second.getName() << "\n";
-        names.push_back(kv.first);
-        ++idx;
-    }
-
-    cout << "Select a module by number: ";
-    int choice; cin >> choice;
-    if (cin.fail() || choice < 1 || choice > (int)names.size()) {
-        cout << "Invalid selection.\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        return;
-    }
-    string moduleName = names[choice - 1];
-
-    // Display rooms
-    cout << "\nAvailable Rooms:\n";
-    for (int i = 0; i < (int)rooms.size(); ++i) {
-        cout << "  " << (i + 1) << ". " << rooms[i] << "\n";
-    }
-    cout << "Select a room by number: ";
-    int roomChoice; cin >> roomChoice;
-    if (roomChoice < 1 || roomChoice > (int)rooms.size()) {
-        cout << "Invalid room selection.\n";
-        return;
-    }
-    string selectedRoom = rooms[roomChoice - 1];
-
-    // Day-of-week selection
-    static const char* days[] = {
-        "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
-    };
-    cout << "\nSelect day:\n";
-    for (int i = 0; i < 7; ++i) {
-        cout << "  " << (i + 1) << ": " << days[i] << "\n";
-    }
-    cout << "Enter choice (1-7): ";
-    int dayChoice; cin >> dayChoice;
-    if (dayChoice < 1 || dayChoice > 7) {
-        cout << "Invalid day selection.\n";
-        return;
-    }
-    string day = days[dayChoice - 1];
-
-    // Time and lecturer
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Enter time of the session: ";
-    string time; getline(cin, time);
-    cout << "Enter lecturer name: ";
-    string lecturer; getline(cin, lecturer);
-
-    // Session type
-    cout << "Enter session type (Lecture/Lab): ";
-    string type; getline(cin, type);
-
-    // Load and display student groups
-    const string groupsFile = "student_groups.txt";
-    vector<string> groups = loadStudentGroupsFromFile(groupsFile);
-    if (groups.empty()) {
-        cout << "No student groups available. Create a group first.\n";
-        return;
-    }
-    cout << "\nAvailable Student Groups:\n";
-    for (size_t i = 0; i < groups.size(); ++i) {
-        cout << "  " << (i + 1) << ". " << groups[i] << "\n";
-    }
-    cout << "Select a group by number: ";
-    int groupChoice; cin >> groupChoice;
-    if (groupChoice < 1 || groupChoice > (int)groups.size()) {
-        cout << "Invalid group selection.\n";
-        return;
-    }
-    string selectedGroup = groups[groupChoice - 1];
-
-    // Prompt for starting and ending week numbers
-    cout << "Enter starting week number: ";
-    int startingWeek; cin >> startingWeek;
-    cout << "Enter ending week number: ";
-    int endingWeek; cin >> endingWeek;
-    if(cin.fail() || startingWeek < 1 || endingWeek < startingWeek) {
-        cout << "Invalid week numbers provided.\n";
-        return;
-    }
-
-    // Store and save session with week numbers
-    Session s(type, day, time, selectedRoom, lecturer, moduleName, selectedGroup, startingWeek, endingWeek);
-    sessions[moduleName].push_back(s);
-    saveSessionToFile(sessionFile, s);
-
-    cout << "Session created for module \"" << moduleName
-         << "\" on " << day << " at " << time
-         << " in room " << selectedRoom
-         << ", lecturer " << lecturer
-         << ", for group " << selectedGroup
-         << ", Weeks " << startingWeek << " to " << endingWeek << ".\n";
-}
-
 // Add a room to the list
 void addRoom(vector<string>& rooms) {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -337,20 +188,6 @@ void addRoom(vector<string>& rooms) {
     rooms.push_back(roomName);
     saveRoomsToFile("rooms.txt", rooms);
     cout << "Room \"" << roomName << "\" added.\n";
-}
-
-// View all sessions
-void viewAllSessions(const unordered_map<string, vector<Session>>& sessions) {
-    if (sessions.empty()) {
-        cout << "No sessions available.\n";
-        return;
-    }
-    cout << "\n=== All Sessions ===\n";
-    for (auto& kv : sessions) {
-        for (auto& sess : kv.second) {
-            sess.printSessionDetails(); // Updated to include student group
-        }
-    }
 }
 
 // Update manageGroups to include "View Student Groups"
@@ -500,89 +337,6 @@ void manageModules(unordered_map<string, Module>& modules, const string& filenam
     }
 }
 
-// Helper function to update sessions file after deletion
-void updateSessionsFile(const string& filename, const unordered_map<string, vector<Session>>& sessions) {
-    ofstream file(filename);
-    // Rewrite the sessions file based on the current sessions map
-    for (const auto& kv : sessions) {
-        for (const Session& s : kv.second) {
-            file << s.getSessionType() << ","
-                 << s.getDay() << ","
-                 << s.getTime() << ","
-                 << s.getRoom() << ","
-                 << s.getLecturer() << ","
-                 << s.getModuleName() << ","
-                 << s.getStudentGroup() << ","
-                 << s.getStartingWeek() << ","
-                 << s.getEndingWeek() << "\n"; // Include week numbers
-        }
-    }
-}
-
-// New function to manage sessions (create and delete)
-void manageSessions(const unordered_map<string, Module>& modules,
-                    unordered_map<string, vector<Session>>& sessions,
-                    vector<string>& rooms) {
-    int choice;
-    while (true) {
-        cout << "\n=== Manage Sessions ===\n"
-             << "1. Create Session\n"
-             << "2. Delete Session\n"
-             << "3. Back to Admin Menu\n"
-             << "Choose an option: ";
-        cin >> choice;
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-        if (choice == 1) {
-            // Use existing createSession function
-            createSession(modules, sessions, rooms);
-        } else if (choice == 2) {
-            // List all sessions with an index for deletion
-            vector<pair<string, int>> sessionIndex; // pair: <moduleName, session vector index>
-            int listIndex = 1;
-            for (auto& kv : sessions) {
-                for (size_t j = 0; j < kv.second.size(); ++j) {
-                    cout << listIndex << ". Module " << kv.first << " - "
-                         << kv.second[j].getSessionType() << " on "
-                         << kv.second[j].getDay() << " at " << kv.second[j].getTime()
-                         << " in room " << kv.second[j].getRoom() << "\n";
-                    sessionIndex.push_back({kv.first, j});
-                    listIndex++;
-                }
-            }
-            if (sessionIndex.empty()) {
-                cout << "No sessions available to delete.\n";
-                continue;
-            }
-            cout << "Select a session to delete by number: ";
-            int delChoice;
-            cin >> delChoice;
-            if (delChoice < 1 || delChoice > (int)sessionIndex.size()) {
-                cout << "Invalid selection.\n";
-                continue;
-            }
-            string modName = sessionIndex[delChoice - 1].first;
-            int sessIdx = sessionIndex[delChoice - 1].second;
-            // Prepare a confirmation message
-            string sessionInfo = sessions[modName][sessIdx].getSessionType() + " session for module " +
-                                 modName;
-            sessions[modName].erase(sessions[modName].begin() + sessIdx);
-            if (sessions[modName].empty()) {
-                sessions.erase(modName);
-            }
-            updateSessionsFile(sessionFile, sessions);
-            cout << "Deleted " << sessionInfo << ".\n";
-        } else if (choice == 3) {
-            break;
-        } else {
-            cout << "Invalid option.\n";
-        }
-    }
-}
-
 // New function to manage rooms
 void manageRooms(vector<string>& rooms) {
     int choice;
@@ -696,7 +450,7 @@ int main() {
 
     auto users = loadUsersFromFile(userFile);
     auto modules = loadModulesFromFile(modulesFile);
-    auto sessions = loadSessionsFromFile(sessionFile);
+    auto sessions = loadSessionsFromFile(sessionFile);  // now sessionFile is defined
     auto rooms = loadRoomsFromFile("rooms.txt");
 
     int choice;

@@ -2,6 +2,11 @@
 #define SESSION_H
 
 #include <string>
+#include <vector>
+#include <unordered_map>
+#include "Session.h"
+#include "Module.h"
+
 using namespace std;
 
 class Session {
@@ -37,5 +42,16 @@ public:
     int getStartingWeek() const;
     int getEndingWeek() const;
 };
+
+void saveSessionToFile(const std::string& filename, const Session& s);
+std::unordered_map<std::string, std::vector<Session>> loadSessionsFromFile(const std::string& filename);
+void updateSessionsFile(const std::string& filename, const std::unordered_map<std::string, std::vector<Session>>& sessions);
+void createSession(const std::unordered_map<std::string, Module>& modules,
+                   std::unordered_map<std::string, std::vector<Session>>& sessions,
+                   std::vector<std::string>& rooms);
+void viewAllSessions(const std::unordered_map<std::string, std::vector<Session>>& sessions);
+void manageSessions(const std::unordered_map<std::string, Module>& modules,
+                    std::unordered_map<std::string, std::vector<Session>>& sessions,
+                    std::vector<std::string>& rooms);
 
 #endif  // SESSION_H
