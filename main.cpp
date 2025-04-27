@@ -7,51 +7,18 @@
 #include <limits>
 #include "Module.h"
 #include "Session.h"
+#include "User.h"
 
 using namespace std;
 
-// Struct to represent a user
-struct User {
-    string username;
-    string password;
-    string role; // "admin" or "student"
-    string group; // new field for student group
-};
+// Removed the definitions of the following functions:
+// - loadUsersFromFile
+// - saveUserToFile
+// - updateAllUsersFile
+// - authenticateUser
+// - registerUser
 
-// Load users from file
-unordered_map<string, User> loadUsersFromFile(const string& filename) {
-    unordered_map<string, User> users;
-    ifstream file(filename);
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string u, p, r, g;
-        getline(ss, u, ',');
-        getline(ss, p, ',');
-        getline(ss, r, ',');
-        // if group info exists
-        if (!getline(ss, g, ',')) {
-            g = "";
-        }
-        users[u] = User{ u, p, r, g };
-    }
-    return users;
-}
-
-// Append a new user to file
-void saveUserToFile(const string& filename, const User& user) {
-    ofstream file(filename, ios::app);
-    file << user.username << "," << user.password << "," << user.role << "," << user.group << "\n";
-}
-
-// New function to rewrite entire users file with updated group info
-void updateAllUsersFile(const string& filename, const unordered_map<string, User>& users) {
-    ofstream file(filename);
-    for (const auto& kv : users) {
-        file << kv.second.username << "," << kv.second.password << ","
-             << kv.second.role << "," << kv.second.group << "\n";
-    }
-}
+// The rest of the code remains unchanged.
 
 // New function to load student groups from student_groups.txt
 vector<string> loadStudentGroupsFromFile(const string& filename) {
@@ -124,34 +91,6 @@ void viewStudentGroups(const string& filename) {
     for (const string& group : groups) {
         cout << "- " << group << "\n";
     }
-}
-
-// Authenticate credentials
-bool authenticateUser(const unordered_map<string, User>& users,
-    const string& username,
-    const string& password,
-    string& outRole) {
-    auto it = users.find(username);
-    if (it != users.end() && it->second.password == password) {
-        outRole = it->second.role;
-        return true;
-    }
-    return false;
-}
-
-// Register a new student
-bool registerUser(unordered_map<string, User>& users,
-    const string& filename,
-    const string& username,
-    const string& password) {
-    if (users.count(username)) {
-        cout << "Username already exists.\n";
-        return false;
-    }
-    User u{ username, password, "student", "" };
-    users[username] = u;
-    saveUserToFile(filename, u);
-    return true;
 }
 
 // Session file name

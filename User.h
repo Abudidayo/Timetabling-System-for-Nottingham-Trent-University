@@ -2,29 +2,39 @@
 #define USER_H
 
 #include <string>
-using namespace std;
+#include <unordered_map>
 
 class User {
-private:
-    string username;
-    string password;
-    string role;  // "admin" or "student"
-    string group; // Group name assigned to the student (CS1, CS2, etc.)
-
 public:
-    // Constructor
-    User(string username, string password, string role, string group = "");
+    std::string username;
+    std::string password;
+    std::string role;   // "admin" or "student"
+    std::string group;  // student group
 
-    // Authentication method
-    bool authenticate(string enteredPassword);
+    // Constructor with default parameter values
+    User(const std::string& username = "", 
+         const std::string& password = "", 
+         const std::string& role = "", 
+         const std::string& group = "");
 
-    // Getter methods
-    string getRole() const;
-    string getUsername() const;
-    string getGroup() const;  // Getter for group
-
-    // Setter method to assign a group
-    void setGroup(const string& newGroup);
+    // Member functions
+    std::string getRole() const;
+    std::string getUsername() const;
+    std::string getGroup() const;
+    void setGroup(const std::string& newGroup);
 };
 
-#endif  // USER_H
+// Free functions declarations
+std::unordered_map<std::string, User> loadUsersFromFile(const std::string& filename);
+void saveUserToFile(const std::string& filename, const User& user);
+void updateAllUsersFile(const std::string& filename, const std::unordered_map<std::string, User>& users);
+bool authenticateUser(const std::unordered_map<std::string, User>& users,
+                      const std::string& username,
+                      const std::string& password,
+                      std::string& outRole);
+bool registerUser(std::unordered_map<std::string, User>& users,
+                  const std::string& filename,
+                  const std::string& username,
+                  const std::string& password);
+
+#endif // USER_H
