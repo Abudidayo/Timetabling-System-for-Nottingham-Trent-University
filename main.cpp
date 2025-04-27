@@ -248,7 +248,7 @@ void showAdminMenu() {
 // Show student menu
 void showStudentMenu() {
     cout << "\n=== Student Menu ===\n"
-        << "1. View All Sessions\n"
+        << "1. View Timetable by Week\n" // Updated option
         << "2. Search Timetable\n"
         << "3. Export Timetable\n"
         << "4. Exit\n"
@@ -721,6 +721,31 @@ void manageRooms(vector<string>& rooms) {
     }
 }
 
+// New function to view the student's timetable by week number.
+// Only sessions whose startingWeek <= selected week <= endingWeek and matching student's group are displayed.
+void viewStudentTimetable(const unordered_map<string, vector<Session>>& sessions, const string& studentGroup) {
+    cout << "Enter week number to view timetable: ";
+    int week;
+    cin >> week;
+    if(cin.fail() || week < 1) {
+        cout << "Invalid week number.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return;
+    }
+    bool found = false;
+    for (const auto& kv : sessions) {
+        for (const auto& s : kv.second) {
+            if (s.getStartingWeek() <= week && s.getEndingWeek() >= week && s.getStudentGroup() == studentGroup) {
+                s.printSessionDetails();
+                found = true;
+            }
+        }
+    }
+    if (!found)
+        cout << "No sessions available for week " << week << " in your group.\n";
+}
+
 int main() {
     const string userFile = "users.txt";
     const string modulesFile = "modules.txt";
@@ -805,7 +830,7 @@ int main() {
                         cout << "Invalid option.\n";
                 }
             }
-        } else {
+        } else {  // Student menu
             while (true) {
                 showStudentMenu();
                 cin >> choice;
@@ -815,7 +840,8 @@ int main() {
                 }
                 switch (choice) {
                     case 1:
-                        cout << "Viewing Timetable...\n";
+                        // Use the logged-in student's group
+                        viewStudentTimetable(sessions, users[username].group);
                         break;
                     case 2:
                         cout << "Searching Timetable...\n";
