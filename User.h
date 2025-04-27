@@ -3,38 +3,47 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
+using namespace std;
 
 class User {
 public:
-    std::string username;
-    std::string password;
-    std::string role;   // "admin" or "student"
-    std::string group;  // student group
+    string username;
+    string password;
+    string role;   // "admin" or "student"
+    string group;  // student group
 
-    // Constructor with default parameter values
-    User(const std::string& username = "", 
-         const std::string& password = "", 
-         const std::string& role = "", 
-         const std::string& group = "");
+    User(const string& username = "", 
+         const string& password = "", 
+         const string& role = "", 
+         const string& group = "");
 
-    // Member functions
-    std::string getRole() const;
-    std::string getUsername() const;
-    std::string getGroup() const;
-    void setGroup(const std::string& newGroup);
+    string getRole() const;
+    string getUsername() const;
+    string getGroup() const;
+    void setGroup(const string& newGroup);
 };
 
-// Free functions declarations
-std::unordered_map<std::string, User> loadUsersFromFile(const std::string& filename);
-void saveUserToFile(const std::string& filename, const User& user);
-void updateAllUsersFile(const std::string& filename, const std::unordered_map<std::string, User>& users);
-bool authenticateUser(const std::unordered_map<std::string, User>& users,
-                      const std::string& username,
-                      const std::string& password,
-                      std::string& outRole);
-bool registerUser(std::unordered_map<std::string, User>& users,
-                  const std::string& filename,
-                  const std::string& username,
-                  const std::string& password);
+// Student group related function declarations (moved from main.cpp)
+vector<string> loadStudentGroupsFromFile(const string& filename);
+void appendStudentGroup(const string& filename, const string& groupName);
+void deleteStudentGroup(const string& filename);
+void viewStudentGroups(const string& filename);
+
+// New: manageGroups function declaration moved from main.cpp
+void manageGroups(unordered_map<string, User>& users);
+
+// Existing user function declarations
+unordered_map<string, User> loadUsersFromFile(const string& filename);
+void saveUserToFile(const string& filename, const User& user);
+void updateAllUsersFile(const string& filename, const unordered_map<string, User>& users);
+bool authenticateUser(const unordered_map<string, User>& users,
+                      const string& username,
+                      const string& password,
+                      string& outRole);
+bool registerUser(unordered_map<string, User>& users,
+                  const string& filename,
+                  const string& username,
+                  const string& password);
 
 #endif // USER_H
