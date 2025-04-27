@@ -12,13 +12,14 @@ private:
     string room;
     string lecturer;
     string moduleName; // Associated module
+    string studentGroup; // New field for student group
 
 public:
     // Default constructor
     Session();
 
     // Constructor with parameters
-    Session(string sessionType, string day, string time, string room, string lecturer, string moduleName);
+    Session(string sessionType, string day, string time, string room, string lecturer, string moduleName, string studentGroup);
 
     // Method to print session details
     void printSessionDetails() const;
@@ -30,6 +31,7 @@ public:
     string getRoom() const;
     string getTime() const;
     string getDay() const;
+    string getStudentGroup() const;
 };
 
 #endif  // SESSION_H

@@ -161,11 +161,12 @@ const string sessionFile = "sessions.txt";
 void saveSessionToFile(const string& filename, const Session& s) {
     ofstream file(filename, ios::app);
     file << s.getSessionType() << ","
-        << s.getDay() << ","
-        << s.getTime() << ","
-        << s.getRoom() << ","
-        << s.getLecturer() << ","
-        << s.getModuleName() << "\n";
+         << s.getDay() << ","
+         << s.getTime() << ","
+         << s.getRoom() << ","
+         << s.getLecturer() << ","
+         << s.getModuleName() << ","
+         << s.getStudentGroup() << "\n"; // Include student group
 }
 
 // Load sessions from file
@@ -175,16 +176,15 @@ unordered_map<string, vector<Session>> loadSessionsFromFile(const string& filena
     string line;
     while (getline(file, line)) {
         stringstream ss(line);
-        string type, day, time, room, lecturer, moduleName;
+        string type, day, time, room, lecturer, moduleName, studentGroup;
         getline(ss, type, ',');
         getline(ss, day, ',');
         getline(ss, time, ',');
         getline(ss, room, ',');
         getline(ss, lecturer, ',');
         getline(ss, moduleName, ',');
-        sessions[moduleName].emplace_back(
-            type, day, time, room, lecturer, moduleName
-        );
+        getline(ss, studentGroup, ','); // Read student group
+        sessions[moduleName].emplace_back(type, day, time, room, lecturer, moduleName, studentGroup);
     }
     return sessions;
 }
@@ -275,8 +275,8 @@ void listModules(const unordered_map<string, Module>& modules) {
 
 // Create session by picking an existing module
 void createSession(const unordered_map<string, Module>& modules,
-    unordered_map<string, vector<Session>>& sessions,
-    vector<string>& rooms) {
+                   unordered_map<string, vector<Session>>& sessions,
+                   vector<string>& rooms) {
     if (modules.empty()) {
         cout << "No modules available. Add a module first.\n";
         return;
@@ -362,15 +362,15 @@ void createSession(const unordered_map<string, Module>& modules,
     string selectedGroup = groups[groupChoice - 1];
 
     // Store and save session
-    Session s(type, day, time, selectedRoom, lecturer, moduleName);
+    Session s(type, day, time, selectedRoom, lecturer, moduleName, selectedGroup);
     sessions[moduleName].push_back(s);
     saveSessionToFile(sessionFile, s);
 
     cout << "Session created for module \"" << moduleName
-        << "\" on " << day << " at " << time
-        << " in room " << selectedRoom
-        << ", lecturer " << lecturer
-        << ", for group " << selectedGroup << ".\n";
+         << "\" on " << day << " at " << time
+         << " in room " << selectedRoom
+         << ", lecturer " << lecturer
+         << ", for group " << selectedGroup << ".\n";
 }
 
 // Add a room to the list
@@ -392,7 +392,7 @@ void viewAllSessions(const unordered_map<string, vector<Session>>& sessions) {
     cout << "\n=== All Sessions ===\n";
     for (auto& kv : sessions) {
         for (auto& sess : kv.second) {
-            sess.printSessionDetails();
+            sess.printSessionDetails(); // Updated to include student group
         }
     }
 }
@@ -555,7 +555,8 @@ void updateSessionsFile(const string& filename, const unordered_map<string, vect
                  << s.getTime() << ","
                  << s.getRoom() << ","
                  << s.getLecturer() << ","
-                 << s.getModuleName() << "\n";
+                 << s.getModuleName() << ","
+                 << s.getStudentGroup() << "\n"; // Include student group
         }
     }
 }
