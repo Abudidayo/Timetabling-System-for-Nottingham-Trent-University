@@ -721,23 +721,28 @@ void manageRooms(vector<string>& rooms) {
     }
 }
 
-// New function to view the student's timetable by week number.
-// Only sessions whose startingWeek <= selected week <= endingWeek and matching student's group are displayed.
+// Updated function to view the student's timetable by week number
 void viewStudentTimetable(const unordered_map<string, vector<Session>>& sessions, const string& studentGroup) {
     cout << "Enter week number to view timetable: ";
     int week;
     cin >> week;
-    if(cin.fail() || week < 1) {
+    if (cin.fail() || week < 1) {
         cout << "Invalid week number.\n";
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         return;
     }
+
+    // Display title for the respective week number
+    cout << "\n=== Timetable for Week " << week << " ===\n";
+
     bool found = false;
     for (const auto& kv : sessions) {
         for (const auto& s : kv.second) {
             if (s.getStartingWeek() <= week && s.getEndingWeek() >= week && s.getStudentGroup() == studentGroup) {
-                s.printSessionDetails();
+                // Print session details in the specified format
+                cout << s.getDay() << " | " << s.getSessionType() << " from " << s.getTime()
+                     << " in " << s.getRoom() << " with " << s.getLecturer() << "\n";
                 found = true;
             }
         }
