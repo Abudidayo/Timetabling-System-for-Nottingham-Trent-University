@@ -1,3 +1,4 @@
 Lab,Monday,12-3,MAE102,Smith,Database,CS1,1,32
 Lab,Tuesday,3,MAE102,Ekithir,Database,CS1,3,42
 Lab,Wednesday,12:00-14:00,JOC006,Peter Fitzgerald,Database,CS2,1,5
+Lab,Tuesday,12-2,JOC006,Smith,Database,CS2,1,4
