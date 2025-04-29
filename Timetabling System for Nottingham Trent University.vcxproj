@@ -134,17 +134,17 @@
     <Text Include="users.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Module.cpp" />
-    <ClCompile Include="Session.cpp" />
-    <ClCompile Include="Timetable.cpp" />
-    <ClCompile Include="User.cpp" />
+    <ClCompile Include="SRC\main.cpp" />
+    <ClCompile Include="SRC\module.cpp" />
+    <ClCompile Include="SRC\session.cpp" />
+    <ClCompile Include="SRC\timetable.cpp" />
+    <ClCompile Include="SRC\user.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Module.h" />
-    <ClInclude Include="Session.h" />
-    <ClInclude Include="Timetable.h" />
-    <ClInclude Include="User.h" />
+    <ClInclude Include="SRC\Module.h" />
+    <ClInclude Include="SRC\Session.h" />
+    <ClInclude Include="SRC\Timetable.h" />
+    <ClInclude Include="SRC\User.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
